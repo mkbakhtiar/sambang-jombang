@@ -1,0 +1,20 @@
+---- 13 Februari 2024 ----
+    Menambahkan INDEX di database untuk mempercepat kinerja pencarian database
+
+    QUERY
+    -- Tabel `data_verifikasi`
+    ALTER TABLE `data_verifikasi` ADD INDEX `idx_id_data` (`id_data`);
+    ALTER TABLE `data_verifikasi` ADD INDEX `idx_timestamp` (`timestamp`);
+
+    Fitur website yang terpengaruhi :
+    - Admin/Dashboard
+    - Admin/Pengisian Data
+    - Admin/Progres Data
+    - Admin/Verifikasi Data
+
+---- 7 Maret 2024 ----
+    - Mengganti role "Admin" menjadi "Superadmin"
+    - Menambahkan role "Admin" baru 
+    - Menambahkan session role "Admin"
+
+    - Menambahkan tabel bernama tbl_geo_urusan dan g_urusan_indikator

@@ -1,0 +1,7 @@
+# Ignore all files with the specified name.
+# Scope is all repo folders.
+.DS_Store
+.DS_Store
+/application
+application/.DS_Store
+.DS_Store
