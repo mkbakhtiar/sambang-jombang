@@ -2,6 +2,6 @@
 # Scope is all repo folders.
 .DS_Store
 .DS_Store
-/application
+/vendor
 application/.DS_Store
 .DS_Store
