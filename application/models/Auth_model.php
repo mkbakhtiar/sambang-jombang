@@ -216,7 +216,7 @@ class Auth_model extends CI_Model
 		if ($dir != "asc" && $dir != "desc") {
 			$dir = "desc";
 		}
-		$valid_columns = ['id_user', 'username', 'nama_role', 'nama_skpd', 'nama_lengkap', 'nip', 'email', 'no_hp'];
+		$valid_columns = ['id_user', 'nama_role', 'nama_skpd', 'nama_lengkap', 'nip', 'email', 'no_hp'];
 		if (!isset($valid_columns[$col])) {
 			$order = null;
 		} else {
@@ -246,7 +246,6 @@ class Auth_model extends CI_Model
 		foreach ($raw_data->result_array() as $rows) {
 			$encrypted_id = encrypt_url(true, $rows['id_user']);
 			$row = [$no++];
-			$row[] = $rows['username'];
 			$row[] = $rows['nama_role'];
 			$row[] = $rows['nama_skpd'];
 			$row[] = $rows['nama_lengkap'];
@@ -256,8 +255,7 @@ class Auth_model extends CI_Model
 			$row[] = [
 				'<button class="btn btn-sm btn-info btn-detail" data-id="' . $encrypted_id . '" data-toggle="tooltip" data-placement="top" title="Detail"><i class="fas fa-info-circle"></i></button> ' .
 					'<button class="btn btn-sm btn-warning btn-edit" data-id="' . $encrypted_id . '" data-toggle="tooltip" data-placement="top" title="Edit"><i class="fas fa-edit"></i></button> ' .
-					'<button class="btn btn-sm btn-danger btn-delete" data-id="' . $encrypted_id . '" data-toggle="tooltip" data-placement="top" title="Hapus"><i class="fas fa-trash-alt"></i></button> ' .
-					'<button class="btn btn-sm btn-dark btn-reset" data-id="' . $encrypted_id . '" data-toggle="tooltip" data-placement="top" title="Reset Password"><i class="fas fa-sync-alt"></i></button>'
+					'<button class="btn btn-sm btn-danger btn-delete" data-id="' . $encrypted_id . '" data-toggle="tooltip" data-placement="top" title="Hapus"><i class="fas fa-trash-alt"></i></button> '
 			];
 			$data[] = $row;
 		}
@@ -282,6 +280,7 @@ class Auth_model extends CI_Model
 
 	public function save_data($data)
 	{
+
 		switch ($data['act']) {
 			case 'add':
 				$insert_data = $data;
@@ -294,6 +293,7 @@ class Auth_model extends CI_Model
 				$update_data = $data;
 				unset($update_data['act']);
 				$update_data['id_user'] = encrypt_url(false, $update_data['id_user']);
+				$update_data['status'] = (int) $data['status'];
 				$this->db->where('id_user', $update_data['id_user']);
 				$submit = $this->db->update('auth_users', $update_data);
 				break;

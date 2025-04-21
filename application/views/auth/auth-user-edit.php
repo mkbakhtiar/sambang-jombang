@@ -11,21 +11,6 @@
             <input type="hidden" name="id_user" id="id_user" value="<?= $edit ? $edit_data['id_user'] : '' ?>">
         <?php endif; ?>
         <div class="mb-3">
-            <label class="form-label" for="username">Username</label>
-            <input type="text" class="form-control" name="username" id="username" value="<?= $edit ? $edit_data['username'] : '' ?>">
-        </div>
-        <?php if (!$edit) : ?>
-            <div class="mb-3">
-                <label class="form-label" for="password">Password</label>
-                <div class="input-group">
-                    <input type="password" class="form-control" name="password" id="password" value="">
-                    <div class="input-group-prepend">
-                        <button class="btn btn-light ms-0" type="button" id="password-addon"><i class="mdi mdi-eye-outline"></i></button>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
-        <div class="mb-3">
             <label class="form-label" for="nama_lengkap">Nama Lengkap</label>
             <input type="text" class="form-control" name="nama_lengkap" id="nama_lengkap" value="<?= $edit ? $edit_data['nama_lengkap'] : '' ?>">
         </div>
@@ -59,6 +44,14 @@
             <label class="form-label" for="no_hp">No HP</label>
             <input type="text" class="form-control" name="no_hp" id="no_hp" value="<?= $edit ? $edit_data['no_hp'] : '' ?>">
         </div>
+        <div class="mb-3">
+            <label class="form-label" for="status">Status</label>
+            <select class="form-control" name="status" id="status" style="width: 100%;" required>
+                <option value="" disabled selected>Pilih Status</option>
+                <option value="1" <?= $edit ? ($edit_data['status'] === '1' ? 'selected' : '') : '' ?>>AKTIF</option>
+                <option value="0" <?= $edit ? ($edit_data['status'] === '0' ? 'selected' : '') : '' ?>>NON-AKTIF</option>
+            </select>
+        </div>
         <div class="mt-4">
             <button type="submit" class="btn btn-primary w-md">Submit</button>
         </div>
@@ -84,7 +77,6 @@
             beforeSend: function() {},
             success: function(data) {
                 // data = $.parseJSON(data);
-                console.log(data);
                 if (data.status == 'success') {
                     $('#modal-edit').modal('hide');
                     $('#tb_data').DataTable().ajax.reload(null, false);

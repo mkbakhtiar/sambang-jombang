@@ -205,7 +205,7 @@
                         window.location.href = '<?= base_url("skpd/select"); ?>';
                     } else {
                         if(result.isVerified){
-                            window.location.href = '<?= base_url("dashboard"); ?>';
+                            window.location.href = '<?= base_url("admin/dashboard"); ?>';
                         }else{
                             window.location.href = '<?= base_url("skpd/verification_notice"); ?>';
                         }

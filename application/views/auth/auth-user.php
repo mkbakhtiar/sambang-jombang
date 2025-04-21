@@ -59,9 +59,8 @@
                                     <thead>
                                         <tr>
                                             <th>#</th>
-                                            <th>Username</th>
                                             <th>Role</th>
-                                            <th>OPD</th>
+                                            <th>SKPD</th>
                                             <th>Nama Lengkap</th>
                                             <th>NIP</th>
                                             <th>E-Mail</th>
@@ -194,20 +193,6 @@
                     })
                     .done(function(data) {
                         modal.find('.modal-title').html('Edit');
-                        modal.find('.modal-body').html(data);
-                        modal.modal('show');
-                    });
-            });
-            $('.btn-reset').on('click', function(e) {
-                e.preventDefault();
-                var id = $(this).data('id');
-                var modal = $('#modal-edit');
-                $.post(base_url + 'auth/reset', {
-                        id: id,
-                        act: 'edit'
-                    })
-                    .done(function(data) {
-                        modal.find('.modal-title').html('Reset Password');
                         modal.find('.modal-body').html(data);
                         modal.modal('show');
                     });
