@@ -112,7 +112,14 @@
                             <div class="card-header">
                                 <div class="row align-middle">
                                     <div class="col-md-12 col-lg-6">
+                                    <div class="col-md-6">
                                         <h4 class="card-title">Daftar Data</h4>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <button id="btn-verify-selected" class="btn btn-primary" disabled>
+                                            <i class="mdi mdi-check-all me-1"></i>Verifikasi Terpilih
+                                        </button>
+                                    </div>
                                     </div>
                                     <div class="col-md-12 col-lg-6">
                                         <div class="row g-3 align-items-end">
@@ -141,6 +148,11 @@
                                 <table id="tb-data-verifikasi" class="table table-bordered" style="width: 100%;">
                                     <thead>
                                         <tr>
+                                            <th>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="checkAll">
+                                                </div>
+                                            </th>
                                             <th>#</th>
                                             <th>Nama Indikator</th>
                                             <th>SKPD</th>
@@ -237,22 +249,43 @@
     $('.select2').select2({
         theme: 'bootstrap4'
     });
+    // Initialize DataTable with adjusted columns
     var tb_verifikasi = $('#tb-data-verifikasi').DataTable({
         "pageLength": 10,
         "serverSide": true,
         "ajax": {
             url: base_url + 'indikator/get_indikator_list/verifikasi',
-            type: 'POST'
+            type: 'POST',
+            "dataSrc": function(json) {
+                // The first element in each row is the ID that needs to be converted to a checkbox
+                for (var i = 0; i < json.data.length; i++) {
+                    var id = json.data[i][0];
+                    var status_verifikasi = json.data[i][9];
+                    
+                    if (status_verifikasi === null) {
+                        json.data[i][0] = '<div class="form-check"><input class="form-check-input row-checkbox" type="checkbox" value="' + id + '" data-id="' + id + '"></div>';
+                    } else {
+                        json.data[i][0] = '<div class="form-check"><input class="form-check-input row-checkbox" type="checkbox" value="' + id + '" data-id="' + id + '" checked disabled></div>';
+                    }
+
+                }
+                return json.data;
+            }
         },
         "order": [
             [8, 'asc']
         ],
         "columnDefs": [{
-            targets: [4],
+            targets: [5],
             className: 'text-end'
+        }, {
+            targets: [0], // checkbox column
+            orderable: false,
+            searchable: false
         }],
         scrollX: true,
         drawCallback: function() {
+            // Your existing callbacks
             $('.a-detail-indikator').on('click', function(e) {
                 e.preventDefault();
                 var id = $(this).data('id');
@@ -266,6 +299,7 @@
                         modal.modal('show');
                     });
             });
+            
             $('.a-detail-data').on('click', function(e) {
                 e.preventDefault();
                 var id = $(this).data('id');
@@ -279,6 +313,7 @@
                         modal.modal('show');
                     });
             });
+            
             $('.btn-verifikasi').on('click', function(e) {
                 e.preventDefault();
                 var id = $(this).data('id');
@@ -292,7 +327,70 @@
                         modal.modal('show');
                     });
             });
+
+            // Add handlers for checkboxes
+            $('#checkAll').on('click', function() {
+                // Ambil status checkbox "Select All" (checked atau tidak)
+                var isChecked = $(this).is(':checked');
+                
+                // Hanya terapkan ke checkbox yang tidak disabled
+                $('.row-checkbox:not(:disabled)').prop('checked', isChecked);
+
+                updateVerifyButtonState();
+            });
+            
+            $('.row-checkbox').on('change', function() {
+                updateVerifyButtonState();
+                
+                // If any checkbox is unchecked, uncheck the "check all" checkbox
+                if (!$(this).prop('checked')) {
+                    $('#checkAll').prop('checked', false);
+                }
+                
+                // If all checkboxes are checked, check the "check all" checkbox
+                else if ($('.row-checkbox:checked').length === $('.row-checkbox').length) {
+                    $('#checkAll').prop('checked', true);
+                }
+            });
         },
+    });
+
+    // Function to update the state of the verification button
+    function updateVerifyButtonState() {
+        // Ubah selector untuk hanya menghitung checkbox yang dicentang dan tidak disabled
+        var checkedCount = $('.row-checkbox:checked:not(:disabled)').length;
+        $('#btn-verify-selected').prop('disabled', checkedCount === 0);
+        
+        // Update teks tombol untuk menampilkan jumlah checkbox yang dicentang dan tidak disabled
+        if (checkedCount > 0) {
+            $('#btn-verify-selected').html('<i class="mdi mdi-check-all me-1"></i>Verifikasi ' + checkedCount + ' Terpilih');
+        } else {
+            $('#btn-verify-selected').html('<i class="mdi mdi-check-all me-1"></i>Verifikasi Terpilih');
+        }
+    }
+
+    // Handle the bulk verification button click
+    $('#btn-verify-selected').on('click', function() {
+        var selectedIds = [];
+        
+        // Collect IDs only from checkboxes that are checked AND not disabled
+        $('.row-checkbox:checked:not(:disabled)').each(function() {
+            selectedIds.push($(this).data('id'));
+        });
+        
+        if (selectedIds.length > 0) {
+            var modal = $('#modal-verifikasi');
+            
+            // Send the IDs to the server
+            $.post(base_url + 'indikator/data_verifikasi_bulk', {
+                ids: selectedIds
+            })
+            .done(function(data) {
+                modal.find('.modal-title').html('Verifikasi Data Massal (' + selectedIds.length + ' item)');
+                modal.find('.modal-body').html(data);
+                modal.modal('show');
+            });
+        }
     });
 
     function update_stats() {

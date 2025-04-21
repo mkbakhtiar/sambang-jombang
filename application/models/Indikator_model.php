@@ -1485,10 +1485,10 @@ class Indikator_model extends CI_Model
             $dir = "desc";
         }
         $valid_columns = $params['columns'];
-        if (!isset($valid_columns[$col])) {
+        if (!isset($valid_columns[$col-1])) { // Adjust for the checkbox column
             $order = null;
         } else {
-            $order = $valid_columns[$col];
+            $order = $valid_columns[$col-1]; // Adjust column index for checkbox
         }
         if ($order != null) {
             $this->db->order_by($order, $dir);
@@ -1512,27 +1512,18 @@ class Indikator_model extends CI_Model
 
 
         foreach ($raw_data->result_array() as $rows) {
-            $row = [$no++];
             $id = $rows[$params['columns'][0]];
             $encrypted_id = encrypt_url(true, $id);
+            
+            // Store the ID first for checkbox column (will be transformed on client-side)
+            $row = [$id]; // This will be converted to checkbox in dataSrc function
+            $row[] = $no++; // Sequential numbering
+            
             if ($rows['level'] == '2') {
                 $rows['nama_indikator'] = $rows['main_indikator'] . '<br> > ' . $rows['nama_indikator'];
                 $rows['id_indikator'] = $rows['id_main_indikator'];
                 $rows['nama_skpd'] = $rows['main_skpd'];
             }
-            // if ($result = $this->get_indikator($rows['id_indikator'])) {
-            //     // Jika get_indikator mengembalikan nilai yang tidak kosong
-            //     $row[] = $result->nama_indikator;
-            // } else {
-            //     // Jika get_indikator mengembalikan nilai kosong
-            //     $row[] = null; // Atau nilai lainnya sesuai kebutuhan Anda
-            // }
-
-            // TERAKHIR DISINIIIII
-
-            // $row[] = $this->get_status_metadata($rows['id_indikator']);
-
-            // var_dump($status_metadata);
 
             $st_konfirm = array(
                 'color' => ($rows['status_verifikasi'] == '1' ? 'btn-success' : ($rows['status_verifikasi'] == '2' ? 'btn-danger' : 'btn-warning')),
@@ -1546,6 +1537,7 @@ class Indikator_model extends CI_Model
             $row[] = $rows['data_file'];
             $row[] = $rows['catatan'];
             $row[] = $rows['timestamp'];
+            $row[] = $rows['status_verifikasi'];
 
             $status_metadata = $this->get_status_metadata($rows['id_indikator']);
             $label_class = '';
@@ -1554,7 +1546,6 @@ class Indikator_model extends CI_Model
             } elseif ($status_metadata === 'TIDAK LENGKAP') {
                 $label_class = 'danger'; // METADATA TIDAK LENGKAP
             }
-            // $row[] = '<span class="badge badge-' . $label_class . '">' . $status_metadata . '</span>';
 
             $row[] = '<button class="btn btn-sm btn-' . $label_class . '">' . $status_metadata . '</span>';
 
@@ -1773,5 +1764,55 @@ class Indikator_model extends CI_Model
         );
         return $output;
         // exit();
+    }
+    public function verifikasi_bulk($data)
+    {
+        $ids = $data['ids'];
+        $success_count = 0;
+        $failed_count = 0;
+        $results = [];
+        
+        // Mulai transaksi database
+        $this->db->trans_start();
+        
+        foreach ($ids as $id) {
+            // Buat data verifikasi untuk setiap ID
+            $verif_data = [
+                'id_data' => $id,
+                'status_verifikasi' => $data['verifikasi'],
+                'keterangan' => $data['keterangan'],
+                'lock_data' => $data['lock_data'] ?? NULL,
+                'timestamp' => date('Y-m-d H:i:s')
+            ];
+            
+            // Cek apakah data dengan id tersebut sudah ada
+            $existing_data = $this->db->where('id_data', $id)->get('data_verifikasi')->row();
+
+            if ($existing_data) {
+                // Data sudah ada, lakukan update
+                $this->db->where('id_data', $id);
+                $insert_result = $this->db->update('data_verifikasi', $verif_data);
+            } else {
+                // Data belum ada, lakukan insert
+                $insert_result = $this->db->insert('data_verifikasi', $verif_data);
+            }
+            
+            if ($insert_result) {
+                $success_count++;
+                $results[$id] = true;
+            } else {
+                $failed_count++;
+                $results[$id] = false;
+            }
+        }
+        
+        // Commit transaksi
+        $this->db->trans_complete();
+        
+        return [
+            'status' => $this->db->trans_status(),
+            'message' => "Berhasil memverifikasi $success_count data. Gagal memverifikasi $failed_count data.",
+            'results' => $results
+        ];
     }
 }
