@@ -401,6 +401,7 @@ class Indikator_model extends CI_Model
         if ($this->session->detail['id_role'] == '3') {
             $where['id_skpd'] = $this->session->detail['id_skpd'];
         }
+            
         $draw = intval($this->input->post("draw"));
         $start = intval($this->input->post("start"));
         $length = intval($this->input->post("length"));
@@ -465,13 +466,40 @@ class Indikator_model extends CI_Model
 
             $status_metadata = $this->get_status_metadata($rows['id_indikator']);
             $label_class = '';
+            
             if ($status_metadata === 'LENGKAP') {
                 $label_class = 'success'; // METADATA LENGKAP
+                $metadata_button = '<button class="btn btn-sm btn-' . $label_class . '">' . $status_metadata . '</button>';
             } elseif ($status_metadata === 'TIDAK LENGKAP') {
                 $label_class = 'danger'; // METADATA TIDAK LENGKAP
+                
+                // Cek apakah nomor telepon tersedia
+                if (!empty($rows['telp_skpd'])) {
+                    // Format pesan WhatsApp
+                    $wa_message = "Untuk ". $rows['nama_skpd'] ." silahkan melengkapi pengisian data & meta data";
+                    $wa_message = urlencode($wa_message);
+                    
+                    // Buat tombol dengan link WhatsApp
+                    // Add country code (62 for Indonesia) if not present
+                    $phone = $rows['telp_skpd'];
+                    // Remove any leading zeros
+                    if (substr($phone, 0, 1) === '0') {
+                        $phone = substr($phone, 1);
+                    }
+                    // Add country code
+                    $phone = '62' . $phone;
+
+                    $metadata_button = '<a href="https://wa.me/' . $phone . '?text=' . $wa_message . '" target="_blank" class="btn btn-sm btn-' . $label_class . '">' . $status_metadata . ' <i class="fab fa-whatsapp ms-1"></i></a>';
+                } else {
+                    // Jika tidak ada nomor telepon, tampilkan tombol biasa
+                    $metadata_button = '<button class="btn btn-sm btn-' . $label_class . '">' . $status_metadata . '</button>';
+                }
+            } else {
+                // Status lainnya jika ada
+                $metadata_button = '<button class="btn btn-sm btn-secondary">' . $status_metadata . '</button>';
             }
 
-            $row[] = '<button class="btn btn-sm btn-' . $label_class . '">' . $status_metadata . '</span>';
+            $row[] = $metadata_button;
 
             $row[] = [
                 '<button class="btn btn-sm btn-confirm ' . $st_konfirm['color'] . '" data-id="' . $encrypted_id . '" data-toggle="tooltip" data-placement="top" title="Konfirmasi">' . $st_konfirm['text'] . '</button>'
@@ -491,6 +519,7 @@ class Indikator_model extends CI_Model
             "recordsFiltered" => $total_data,
             "data" => $data
         );
+        
         return $output;
     }
 
@@ -1296,9 +1325,10 @@ class Indikator_model extends CI_Model
 
     public function get_status_metadata($id, $detail = false)
     {
+        
         $raw = $this->db->where('id_indikator', $id)->get('v_indikator')->row_array();
         if (isset($raw)) {
-            $rmetadata = json_decode($raw['metadata'], true);
+            $rmetadata = !empty($raw['metadata']) ? json_decode($raw['metadata'], true) : [];
             $colmd = $this->get_metadata_cols();
             foreach ($colmd as $key => $value) {
                 $metadata[$value['key_metadata']] = isset($rmetadata[$value['key_metadata']]) ? $rmetadata[$value['key_metadata']] : null;
