@@ -543,6 +543,65 @@ class Indikator extends CI_Controller
 		}
 	}
 
+	public function data_verifikasi_bulk($type = null)
+	{
+		if ($type == null) {
+			// Ambil array ID yang dikirim dari frontend
+			$ids = $this->input->post('ids');
+			
+			// Jika tidak ada ID yang dikirim
+			if (empty($ids)) {
+				echo "Tidak ada data yang dipilih";
+				return;
+			}
+			
+			// Array untuk menyimpan data verifikasi
+			$verifikasi_data = [];
+			
+			// Ambil data verifikasi untuk setiap ID
+			foreach ($ids as $id) {
+				$encrypted_id = encrypt_url(false, $id);
+				$row = $this->db->where('id_data', $encrypted_id)
+							->order_by('timestamp', 'DESC')
+							->limit(1)
+							->get('v_data_verifikasi')
+							->row_array();
+				
+				if ($row) {
+					$verifikasi_data[$id] = $row;
+				}
+			}
+			
+			$data = array(
+				'verifikasi_data' => $verifikasi_data,
+				'skpd' => $this->im->get_skpd(),
+				'ids' => $ids
+			);
+			
+			// Load view untuk verifikasi massal
+			$this->load->view('indikator/partials/data-verifikasi-bulk', $data);
+		} elseif ($type == 'submit') {
+			// Proses submit verifikasi massal
+			$raw = $this->security->xss_clean($this->input->post());
+			$result = $this->im->verifikasi_bulk($raw);
+			
+			header('Content-Type: application/json');
+			echo json_encode($result);
+			exit();
+		}
+	}
+
+	// Tambahkan juga fungsi untuk menyimpan verifikasi massal
+	public function save_verifikasi_bulk()
+	{
+		$raw = $this->security->xss_clean($this->input->post());
+		$result = $this->im->verifikasi_bulk($raw);
+		
+		header('Content-Type: application/json');
+		echo json_encode($result);
+		exit();
+	}
+
 	public function add($id = null)
 	{
 		$id = encrypt_url(false, $id);

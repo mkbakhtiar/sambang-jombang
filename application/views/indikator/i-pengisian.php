@@ -89,7 +89,13 @@
                     <div class="col-xl-12">
                         <div class="card">
                             <div class="card-body">
-                                <h4 class="card-title">Progres Pengisian Data</h4>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="card-title">Progres Pengisian Data</h4>
+                                    <a href="https://wa.me/<?= $props['stats_indikator']['telp_skpd'] ?? '' ?>?text=<?= urlencode("Progress pengisian " . ($props['stats_data']['skpd_name'] ?? 'OPD') . " " . $props['stats_data']['total'] . "%, dengan rincian:\n\n" . implode("\n", array_map(function($k, $v, $i) { return ($i+1) . ". " . $k . " " . $v . "%"; }, array_keys($props['stats_data']['detail']), array_values($props['stats_data']['detail']), array_keys(array_keys($props['stats_data']['detail']))))) ?>" 
+                                    class="btn btn-success" target="_blank">
+                                        <i class="mdi mdi-whatsapp me-1"></i> Share Progress
+                                    </a>
+                                </div>
                                 <div>
                                     <div class="progress animated-progess mb-4">
                                         <div class="progress-bar" role="progressbar" style="width: <?= $props['stats_data']['total'] ?>%" aria-valuenow="<?= $props['stats_data']['total'] ?>" aria-valuemin="0" aria-valuemax="100"></div>
@@ -150,7 +156,7 @@
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <a href="#" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">Import Excel</a>    
+                                                    <a href="#" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">Import</a>    
                                                 </div>
                                             </div>
                                             
@@ -160,7 +166,7 @@
                                                 <div class="modal-dialog modal-xl">
                                                     <div class="modal-content">
                                                         <div class="modal-header">
-                                                            <h5 class="modal-title" id="importModalLabel">Import Indikator</h5>
+                                                            <h5 class="modal-title" id="importModalLabel">Import Indikator (Excel)</h5>
                                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                         </div>
                                                         <div class="modal-body">
@@ -800,7 +806,39 @@ $(document).ready(function() {
         });
     });
 });
+
+$(document).ready(function() {
+    // Format the WhatsApp share message
+    function formatWhatsAppMessage() {
+        const skpdName = <?= json_encode($props['stats_data']['skpd_name'] ?? 'OPD') ?>;
+        const totalProgress = <?= json_encode($props['stats_data']['total']) ?>;
+        
+        let message = `Progress pengisian ${skpdName} ${totalProgress}%, dengan rincian:\n\n`;
+        
+        // Add year details
+        let counter = 1;
+        <?php foreach ($props['stats_data']['detail'] as $year => $progress) : ?>
+        message += `${counter}. ${year} ${<?= json_encode($progress) ?>}%\n`;
+        counter++;
+        <?php endforeach; ?>
+        
+        return encodeURIComponent(message);
+    }
+    
+    // Create the WhatsApp share button
+    const whatsappBtn = $('<a>', {
+        class: 'btn btn-success ms-2',
+        href: `https://wa.me/${<?= json_encode($props['stats_indikator']['telp_skpd'] ?? '') ?>}?text=${formatWhatsAppMessage()}`,
+        target: '_blank',
+        html: '<i class="mdi mdi-whatsapp me-1"></i> Share Progress'
+    });
+    
+    // Add the button next to the progress bar
+    $('.progress.animated-progess').parent().append(whatsappBtn);
+});
+
 </script>
+
 
 </body>
 
