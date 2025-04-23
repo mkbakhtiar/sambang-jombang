@@ -704,6 +704,7 @@ class Indikator_model extends CI_Model
         // $data = array();
 
         // var_dump($raw_data);
+        
         $no = $start + 1;
         foreach ($raw_data->result_array() as $rows) {
             $row = [$no++];
@@ -736,7 +737,32 @@ class Indikator_model extends CI_Model
                 '<button class="btn btn-sm btn-warning btn-input" data-id="' . $encrypted_id . '" data-toggle="tooltip" data-placement="top" title="input"><i class="fas fa-edit"></i> Input</button> ' .
                 '<button class="btn btn-sm btn-info btn-detail" data-id="' . $encrypted_id . '" data-toggle="tooltip" data-placement="top" title="Detail"><i class="far fa-eye"></i> Lihat</button></div>'
             ];
-            $data[] = $row;
+
+            // Show Metadata
+
+            $rmetadata = !empty($row['metadata']) ? json_decode($row['metadata'], true) : [];
+            $colmd = $this->get_metadata_cols();
+            foreach ($colmd as $key => $value) {
+                $metadata[$value['key_metadata']] = isset($rmetadata[$value['key_metadata']]) ? $rmetadata[$value['key_metadata']] : null;
+                $colmd[$key]['value'] = isset($rmetadata[$value['key_metadata']]) ? $rmetadata[$value['key_metadata']] : null;
+            }
+
+            // Cek apakah ada nilai kosong dalam metadata
+            $metadataIsEmpty = false;
+            foreach ($metadata as $value) {
+                if ($value === null || $value === "") {
+                    $metadataIsEmpty = true;
+                    break;
+                }
+            }
+
+            if (!$metadataIsEmpty) {
+                $row[] = "LENGKAP"; // Semua data metadata terisi penuh
+                $data[] = $row;
+            } else {
+                $row[] = "TIDAK LENGKAP"; // Ada data metadata yang kosong
+            }
+
         }
         // Use the copied active query to count the total data
         $total_data_query = $sub_query->select("COUNT(*) as num")->where($where)->get($params['table']);
