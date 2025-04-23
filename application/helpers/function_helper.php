@@ -1392,7 +1392,7 @@ function encrypt_url($enc = true, $url = '')
 		$url_new = str_replace(array('=', '+', '/'), array('-', '_', '~'), $enc_url);
 		return $url_new;
 	} else {
-		$enc_url = str_replace(array('-', '_', '~'), array('=', '+', '/'), $url);
+		$enc_url = str_replace(array('-', '_', '~'), array('=', '+', '/'), (string)($url ?? ''));
 		$dec_url = $ci->encryption->decrypt($enc_url);
 		return $dec_url;
 	}

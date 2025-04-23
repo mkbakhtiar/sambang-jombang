@@ -426,8 +426,11 @@ class Indikator_model extends CI_Model
         } else {
             $order = $valid_columns[$col];
         }
+        
         if ($order != null) {
             $this->db->order_by($order, $dir);
+        } else{
+            $this->db->order_by('timestamp', 'DESC');
         }
 
         if (!empty($search)) {
@@ -473,14 +476,22 @@ class Indikator_model extends CI_Model
             } elseif ($status_metadata === 'TIDAK LENGKAP') {
                 $label_class = 'danger'; // METADATA TIDAK LENGKAP
                 
+                // Dapatkan detail metadata yang belum lengkap
+                $missing_metadata = $this->get_missing_metadata_details($rows['id_indikator']);
+                
                 // Cek apakah nomor telepon tersedia
                 if (!empty($rows['telp_skpd'])) {
-                    // Format pesan WhatsApp
-                    $wa_message = "Untuk ". $rows['nama_skpd'] ." silahkan melengkapi pengisian data & meta data";
+                    // Format pesan WhatsApp dengan detail metadata yang belum lengkap
+                    $wa_message = "Untuk ". $rows['nama_skpd'] ." silahkan melengkapi pengisian data & meta data berikut:\n\n";
+                    
+                    // Tambahkan daftar metadata yang belum lengkap
+                    foreach ($missing_metadata as $index => $item) {
+                        $wa_message .= ($index+1) . ". " . $item['nama_metadata'] . "\n";
+                    }
+                    
                     $wa_message = urlencode($wa_message);
                     
                     // Buat tombol dengan link WhatsApp
-                    // Add country code (62 for Indonesia) if not present
                     $phone = $rows['telp_skpd'];
                     // Remove any leading zeros
                     if (substr($phone, 0, 1) === '0') {
@@ -521,6 +532,39 @@ class Indikator_model extends CI_Model
         );
         
         return $output;
+    }
+
+    /**
+     * Mendapatkan detail metadata yang belum lengkap untuk indikator tertentu
+     * 
+     * @param int $id_indikator ID indikator
+     * @return array Array berisi detail metadata yang belum lengkap
+     */
+    public function get_missing_metadata_details($id_indikator)
+    {
+        // Ambil metadata untuk indikator ini
+        $indikator = $this->db->where('id_indikator', $id_indikator)->get('v_indikator')->row_array();
+        $rmetadata = !empty($indikator['metadata']) ? json_decode($indikator['metadata'], true) : [];
+        
+        // Ambil semua kolom metadata yang seharusnya ada
+        $colmd = $this->get_metadata_cols();
+        
+        $missing_metadata = [];
+        
+        // Periksa metadata mana yang belum diisi
+        foreach ($colmd as $key => $value) {
+            $metadata_value = isset($rmetadata[$value['key_metadata']]) ? $rmetadata[$value['key_metadata']] : null;
+            
+            // Jika metadata kosong atau null, tambahkan ke daftar yang belum lengkap
+            if ($metadata_value === null || $metadata_value === "") {
+                $missing_metadata[] = [
+                    'key_metadata' => $value['key_metadata'],
+                    'nama_metadata' => $value['nama_metadata'] // Pastikan kolom ini ada di tabel metadata
+                ];
+            }
+        }
+        
+        return $missing_metadata;
     }
 
     function build_subind_datatables($params)

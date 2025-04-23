@@ -86,12 +86,13 @@
                 </div>
 
                 <div class="row">
+
                     <div class="col-xl-12">
                         <div class="card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h4 class="card-title">Progres Pengisian Data</h4>
-                                    <a href="https://wa.me/<?= $props['stats_indikator']['telp_skpd'] ?? '' ?>?text=<?= urlencode("Progress pengisian " . ($props['stats_data']['skpd_name'] ?? 'OPD') . " " . $props['stats_data']['total'] . "%, dengan rincian:\n\n" . implode("\n", array_map(function($k, $v, $i) { return ($i+1) . ". " . $k . " " . $v . "%"; }, array_keys($props['stats_data']['detail']), array_values($props['stats_data']['detail']), array_keys(array_keys($props['stats_data']['detail']))))) ?>" 
+                                    <a href="https://wa.me/<?= $props['stats_indikator']['telp_skpd'] ?? '' ?>?text=<?= urlencode("Progress pengisian " . ($props['stats_indikator']['nama_skpd'] ?? 'OPD') . " " . $props['stats_data']['total'] . "%, dengan rincian:\n\n" . implode("\n", array_map(function($k, $v, $i) { return ($i+1) . ". " . $k . " " . $v . "%"; }, array_keys($props['stats_data']['detail']), array_values($props['stats_data']['detail']), array_keys(array_keys($props['stats_data']['detail']))))) ?>" 
                                     class="btn btn-success" target="_blank">
                                         <i class="mdi mdi-whatsapp me-1"></i> Share Progress
                                     </a>
@@ -810,7 +811,7 @@ $(document).ready(function() {
 $(document).ready(function() {
     // Format the WhatsApp share message
     function formatWhatsAppMessage() {
-        const skpdName = <?= json_encode($props['stats_data']['skpd_name'] ?? 'OPD') ?>;
+        const skpdName = <?= json_encode($props['stats_indikator']['nama_skpd'] ?? 'OPD') ?>;
         const totalProgress = <?= json_encode($props['stats_data']['total']) ?>;
         
         let message = `Progress pengisian ${skpdName} ${totalProgress}%, dengan rincian:\n\n`;

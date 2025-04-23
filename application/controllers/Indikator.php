@@ -277,7 +277,7 @@ class Indikator extends CI_Controller
 		switch ($type) {
 			case 'confirm':
 				$params = array(
-					'columns' => ['id_indikator', 'nama_indikator', 'definisi_operasional', 'nama_satuan'],
+					'columns' => ['id_indikator', 'nama_indikator', 'definisi_operasional', 'nama_satuan', 'timestamp'],
 					'table' => 'v_indikator',
 					'type' => $type,
 					'id_skpd' => $id_skpd
