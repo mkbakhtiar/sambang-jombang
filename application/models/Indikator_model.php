@@ -426,8 +426,11 @@ class Indikator_model extends CI_Model
         } else {
             $order = $valid_columns[$col];
         }
+        
         if ($order != null) {
             $this->db->order_by($order, $dir);
+        } else{
+            $this->db->order_by('timestamp', 'DESC');
         }
 
         if (!empty($search)) {

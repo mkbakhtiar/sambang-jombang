@@ -177,6 +177,7 @@
                                             <th style="width: 40%;">Nama Indikator</th>
                                             <th style="width: 40%;">Definisi Operasional</th>
                                             <th>Satuan</th>
+                                            <th>Timestamp</th>
                                             <th>Sub Indikator</th>
                                             <th>Metadata</th>
                                             <?php if ($this->session->admin || !$this->session->admin2): ?>
@@ -276,6 +277,7 @@
             url: base_url + 'indikator/get_indikator_list/confirm/<?= $this->session->admin || $this->session->admin2 ? $this->uri->segment(3) : null ?>',
             type: 'POST'
         },
+        order: [[4, 'desc']],
         // dom: '',
         scrollX: true,
         drawCallback: function () {
