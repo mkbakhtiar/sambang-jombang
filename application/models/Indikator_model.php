@@ -119,7 +119,7 @@ class Indikator_model extends CI_Model
         if ($id_skpd == null) {
             $where = [[], []];
         } else {
-            $where = [['id_skpd' => $id_skpd], ['main_id_skpd' => $id_skpd]];
+            $where = [['vd.id_skpd' => $id_skpd], ['vd.main_id_skpd' => $id_skpd]];
         }
 
         $this->db->select('idk.metadata, vd.tahun, vd.id_skpd, vd.main_id_skpd');

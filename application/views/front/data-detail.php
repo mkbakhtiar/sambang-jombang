@@ -1,4 +1,3 @@
-
 <?php $this->load->view('front/partials/header'); ?>
 
 <script>
@@ -172,18 +171,12 @@ initMDB({ Ripple });
                             </div>
                                 <div class="row">
                                     <div class="card-body" id="sub-container">
-                                <!-- <div class="row gy-4">
-                                    <div class="col-lg-6 position-relative align-self-start order-lg-last order-last">
-                                        <div id="chart-container"></div>
-                                    </div> -->
                                     <div class="col-lg-12 content order-first order-lg-first">
-                                        <!-- <h3><?= $props['ind_data']['nama_indikator']; ?></h3> -->
                                         <div class="row">
                                             <div class="col">
                                                 <!-- Change the list to a table -->
                                                 <table id="tb_metadata" class="table" style="width: 100%;">
                                                     <thead class="bg-dark text-light">
-                                                        <!-- <tr class="table-dark text-center align-middle"> -->
                                                         <tr class="text-center align-middle">
                                                             <th>Isi</th>
                                                             <th>Deskripsi</th>
@@ -258,67 +251,16 @@ initMDB({ Ripple });
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <?php if ($props['sub_data']['count'] != '0') : ?>
-                        <div class="container pt-4">
-                            <!-- <div class="row gy-4">
-                                <div class="section-header" style="margin-top: 0" data-aos="fade-up" data-aos-delay="100">
-                                    <h2>Sub Indikator</h2>
-                                </div>
+                <div class="container pt-4">
+                    <div class="row mt-3" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card shadow shadow-sm">
+                            <div class="card-body">
+                                <div id="chart-sub-container"></div>
                             </div>
-                            <div class="row" data-aos="fade-up" data-aos-delay="100">
-                                <table class="table table-bordered">
-                                    <thead class="bg-dark text-light">
-                                        <tr class="text-center">
-                                            <th>Nama Sub Indikator</th>
-                                            <?php foreach ($props['tahun'] as $kt => $vt) : ?>
-                                                <th><?= $vt['nama_tahun']; ?></th>
-                                            <?php endforeach; ?>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php $csubdata = []; ?>
-                                        <?php foreach ($props['sub_data']['subs'] as $ks => $vs) : ?>
-                                            <?php $tmp = ['name' => $vs['nama_indikator'], 'data' => []]; ?>
-                                            <tr>
-                                                <td class=""><?= $vs['nama_indikator'] ?></td>
-                                                <?php foreach ($vs['data'] as $ksd => $vsd) : ?>
-                                                    <td class="text-end"><?= convert_number($vsd['data_angka']); ?></td>
-                                                    <?php $tmp['data'][] = $vsd['data_angka']; ?>
-                                                <?php endforeach; ?>
-                                            </tr>
-                                            <?php $csubdata[] = $tmp; ?>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div> -->
-                            <div class="row mt-3" data-aos="fade-up" data-aos-delay="100">
-                                <div class="card shadow shadow-sm">
-                                    <div class="card-body">
-                                        <div id="chart-sub-container"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- <table id="data-table" class="table table-bordered">
-                                    <thead class="bg-dark text-light">
-                                        <tr class="text-center">
-                                            <?php foreach ($props['tahun'] as $kt => $vt) : ?>
-                                                <th><?= $vt['nama_tahun']; ?></th>
-                                                <?php $ctahun[] = $vt['nama_tahun'] ?>
-                                            <?php endforeach; ?>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="align-middle">
-                                            <?php foreach ($props['ind_data']['data'] as $kd => $vd) : ?>
-                                                <td class="text-end"><?= convert_number($vd['data_angka']); ?></td>
-                                                <?php $cdata[] = floatval($vd['data_angka']) ?>
-                                            <?php endforeach; ?>
-                                        </tr>
-                                    </tbody>
-                                </table> -->
                         </div>
-                    <?php endif; ?>
                     </div>
+                </div>
+            </div>
             <div class="modal-footer">
 
             </div>
@@ -354,6 +296,33 @@ initMDB({ Ripple });
 
 <script src="<?= base_url() ?>/assets/js/app.js"></script>
 <script>
+    // Persiapkan data untuk grafik
+    <?php
+    // Persiapkan data tahun untuk label
+    $tahunLabels = [];
+    foreach ($props['tahun'] as $kt => $vt) {
+        $tahunLabels[] = $vt['nama_tahun'];
+    }
+    
+    // Persiapkan data utama
+    $mainData = [];
+    foreach ($props['ind_data']['data'] as $kd => $vd) {
+        $mainData[] = floatval($vd['data_angka']);
+    }
+    
+    // Persiapkan data sub indikator jika ada
+    $csubdata = [];
+    if (!empty($props['sub_data']['subs'])) {
+        foreach ($props['sub_data']['subs'] as $ks => $vs) {
+            $tmp = ['name' => $vs['nama_indikator'], 'data' => []];
+            foreach ($vs['data'] as $ksd => $vsd) {
+                $tmp['data'][] = floatval($vsd['data_angka']);
+            }
+            $csubdata[] = $tmp;
+        }
+    }
+    ?>
+
     var options = {
         chart: {
             height: 350,
@@ -382,19 +351,17 @@ initMDB({ Ripple });
             }
         },
         series: [{
-            name: '',
-            data: <?= json_encode($cdata); ?>
+            name: '<?= $props['ind_data']['nama_indikator']; ?>',
+            data: <?= json_encode($mainData); ?>
         }],
-        // colors: columnDatalabelColors,
         grid: {
             borderColor: '#f1f1f1',
         },
         xaxis: {
-            categories: <?= json_encode($ctahun); ?>,
+            categories: <?= json_encode($tahunLabels); ?>,
             position: 'bottom',
             labels: {
                 offsetY: 18,
-
             },
             axisBorder: {
                 show: false
@@ -419,7 +386,6 @@ initMDB({ Ripple });
                 offsetY: -35,
             }
         },
-
         yaxis: {
             axisBorder: {
                 show: false
@@ -433,9 +399,8 @@ initMDB({ Ripple });
                     return val + " <?= $props['ind_data']['nama_satuan'] ?>";
                 }
             }
-
         }
-    }
+    };
 
     var chart = new ApexCharts(
         document.querySelector("#chart-container"),
@@ -444,7 +409,9 @@ initMDB({ Ripple });
 
     chart.render();
 
+    // Menampilkan grafik berdasarkan kondisi sub data
     <?php if ($props['sub_data']['count'] != '0') : ?>
+        // Jika ada sub data, tampilkan grafik sub data
         var optionsSub = {
             series: <?= json_encode($csubdata); ?>,
             chart: {
@@ -467,13 +434,8 @@ initMDB({ Ripple });
                 colors: ['transparent']
             },
             xaxis: {
-                categories: <?= json_encode($ctahun); ?>,
+                categories: <?= json_encode($tahunLabels); ?>,
             },
-            // yaxis: {
-            //     title: {
-            //         text: '$ (thousands)'
-            //     }
-            // },
             fill: {
                 opacity: 1
             },
@@ -488,11 +450,50 @@ initMDB({ Ripple });
 
         var chartSub = new ApexCharts(document.querySelector("#chart-sub-container"), optionsSub);
         chartSub.render();
+    <?php else : ?>
+        // Jika tidak ada sub data, tampilkan grafik data utama
+        var optionsMain = {
+            series: [{
+                name: '<?= $props['ind_data']['nama_indikator']; ?>',
+                data: <?= json_encode($mainData); ?>
+            }],
+            chart: {
+                type: 'bar',
+                height: 350
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded'
+                },
+            },
+            dataLabels: {
+                enabled: true
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: <?= json_encode($tahunLabels); ?>,
+            },
+            fill: {
+                opacity: 1
+            },
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val + " <?= $props['ind_data']['nama_satuan'] ?>";
+                    }
+                }
+            }
+        };
+
+        var chartMain = new ApexCharts(document.querySelector("#chart-sub-container"), optionsMain);
+        chartMain.render();
     <?php endif; ?>
-    // Cari tombol grafik
-
-
-
 </script>
 <script>
      $(document).ready(function () {
@@ -544,8 +545,8 @@ initMDB({ Ripple });
                 text: 'Grafik',
                 className: 'buttons-open-graph',
                 action: function (e, dt, node, config) {
-                    // Tambahkan logika di sini untuk membuka modal
-                    $('#modal-graph').modal('show'); // Contoh: Memanggil modal dengan ID 'myModal'
+                    // Selalu tampilkan modal grafik
+                    $('#modal-graph').modal('show');
                 }
             }
         ],
@@ -564,12 +565,6 @@ initMDB({ Ripple });
             var buttonsCsv = $('.buttons-csv-sub');
             var buttonsGraph = $('.buttons-open-graph');
             
-            // Periksa jumlah data
-            <?php if ($props['sub_data']['count'] == null) : ?>
-                // Jika jumlah data adalah 0, nonaktifkan tombol grafik
-                buttonsGraph.prop('disabled', true);
-            <?php endif; ?>
-
             function changeClass(element, oldClass, newClass, iconClass) {
                 element.removeClass(oldClass);
                 element.addClass(newClass);
@@ -579,12 +574,8 @@ initMDB({ Ripple });
             changeClass(buttonsPdf, 'btn-secondary', 'btn-danger', 'fas fa-file-pdf');
             changeClass(buttonsExcel, 'btn-secondary', 'btn-success', 'fas fa-file-excel');
             changeClass(buttonsCsv, 'btn-secondary', 'btn-info', 'fas fa-file-csv');
-            if(buttonsGraph.prop('disabled') !== true){
-                changeClass(buttonsGraph, 'btn-secondary', 'btn-warning', 'fas fa-chart-line');
-            }else{
-                changeClass(buttonsGraph, 'btn-secondary', 'btn-secondary', 'fas fa-chart-line');
-
-            }
+            // Selalu aktifkan tombol grafik
+            changeClass(buttonsGraph, 'btn-secondary', 'btn-warning', 'fas fa-chart-line');
         }
     });
 
@@ -608,6 +599,4 @@ initMDB({ Ripple });
 </script>
 <section id="stats-counter" class="stats-counter pt-0">
        
-    </section>
-
-    
+</section>
