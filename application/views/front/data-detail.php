@@ -76,7 +76,21 @@ initMDB({ Ripple });
                         <div class="row">
                             <div class="card-body" id="sub-container">
                                 <div class="table-responsive">
-                                    <table id="tb_sub"  class="table table-bordered table-hover" style="width: 100%;">
+                                    <table id="tb_sub" class="table table-bordered table-hover" style="width: 100%;">
+                                        <div class="d-flex mb-4 justify-content-start">
+                                            <div class="d-flex align-items-center me-3">
+                                                <button class="btn btn-xs btn-danger" style="width: 15px; height: 15px; padding: 0; margin-right: 5px;">&nbsp;</button>
+                                                <span>Sangat Sementara</span>
+                                            </div>
+                                            <div class="d-flex align-items-center me-3">
+                                                <button class="btn btn-xs btn-warning" style="width: 15px; height: 15px; padding: 0; margin-right: 5px;">&nbsp;</button>
+                                                <span>Sementara</span>
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <button class="btn btn-xs btn-success" style="width: 15px; height: 15px; padding: 0; margin-right: 5px;">&nbsp;</button>
+                                                <span>Final</span>
+                                            </div>
+                                        </div>
                                         <thead class="bg-dark text-light">
                                             <tr class="table-secondary text-center align-middle">
                                                 <th rowspan="2">#</th>
@@ -96,7 +110,25 @@ initMDB({ Ripple });
                                                 <td>1.</td>
                                                 <td style="width: 30%;"><?= $props['ind_data']['nama_indikator']; ?></td>
                                                 <?php foreach ($props['ind_data']['data'] as $kd => $vd) : ?>
-                                                    <td class="text-end"><?= convert_number($vd['data_angka']); ?></td>
+                                                    <td class="text-center">
+                                                        <?php
+                                                        $status_data = '';
+                                                        switch ($vd['status_data']) {
+                                                            case 'sangat_sementara':
+                                                                $status_data = '<button class="btn btn-xs btn-danger" style="width: 15px; height: 15px; padding: 0;">&nbsp;</button>';
+                                                                break;
+                                                            case 'sementara':
+                                                                $status_data = '<button class="btn btn-xs btn-warning" style="width: 15px; height: 15px; padding: 0;">&nbsp;</button>';
+                                                                break;
+                                                            case 'final':
+                                                                $status_data = '<button class="btn btn-xs btn-success" style="width: 15px; height: 15px; padding: 0;">&nbsp;</button>';
+                                                                break;
+                                                        }
+                                                        echo $status_data;
+                                                        ?>
+                                                        <br>
+                                                        <?= convert_number($vd['data_angka']); ?>
+                                                    </td>
                                                 <?php endforeach; ?>
                                                 <td><?= $props['ind_data']['nama_satuan']; ?></td>
                                                 <td><?= $props['ind_data']['nama_skpd']; ?></td>
@@ -106,7 +138,25 @@ initMDB({ Ripple });
                                                     <td>1.<?= strval($ks + 1) ?>.</td>
                                                     <td style="width: 30%;"><?= $vs['nama_indikator'] ?></td>
                                                     <?php foreach ($vs['data'] as $ksd => $vsd) : ?>
-                                                        <td class="text-end"><?= convert_number($vsd['data_angka']); ?></td>
+                                                        <td class="text-center">
+                                                            <?php
+                                                            $status_data = '';
+                                                            switch ($vsd['status_data']) {
+                                                                case 'sangat_sementara':
+                                                                    $status_data = '<button class="btn btn-xs btn-danger" style="width: 15px; height: 15px; padding: 0;">&nbsp;</button>';
+                                                                    break;
+                                                                case 'sementara':
+                                                                    $status_data = '<button class="btn btn-xs btn-warning" style="width: 15px; height: 15px; padding: 0;">&nbsp;</button>';
+                                                                    break;
+                                                                case 'final':
+                                                                    $status_data = '<button class="btn btn-xs btn-success" style="width: 15px; height: 15px; padding: 0;">&nbsp;</button>';
+                                                                    break;
+                                                            }
+                                                            echo $status_data;
+                                                            ?>
+                                                            <br>
+                                                            <?= convert_number($vsd['data_angka']); ?>
+                                                        </td>
                                                     <?php endforeach; ?>
                                                     <td><?= $vs['nama_satuan']; ?></td>
                                                     <td></td>

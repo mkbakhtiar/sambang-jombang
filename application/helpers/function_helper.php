@@ -1409,6 +1409,9 @@ function createSlug($create = true, $id = null,  $text = null)
 		$result = $id . '-' . $text;
 		return $result;
 	} else {
+		if ($text === null) {
+            return $id;
+        }
 		$text = explode('-', $text);
 		$id = $text[0];
 		return $id;
