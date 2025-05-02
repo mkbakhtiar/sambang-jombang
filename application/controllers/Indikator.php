@@ -400,6 +400,8 @@ class Indikator extends CI_Controller
 
 	public function pengisian($id = null, $idt = null)
 	{
+		// $id = id_skpd $idt = id_tagar
+
 		if ($idt === 'all') {
 			$idt = null;
 		}
@@ -428,7 +430,6 @@ class Indikator extends CI_Controller
 		);
 		// var_dump("Tahun =" . $props['stats_data']['cnt_tahun'] .  "Data =" . $props['stats_data']['cnt_data']);
 
-		// var_dump($idt);
 		$this->load->view('indikator/i-pengisian', $data);
 	}
 

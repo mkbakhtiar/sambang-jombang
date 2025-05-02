@@ -81,7 +81,7 @@ class Indikator_model extends CI_Model
         return $data;
     }
 
-    function get_all_indikator($id_skpd = null, $id_tagar = null)
+    function get_all_indikator($id_skpd = null, $id_tagar = null, $is_metadata = false)
     {
         if ($id_skpd == null) {
             $where = [[], []];
@@ -100,6 +100,14 @@ class Indikator_model extends CI_Model
             // $this->db->where('vii.id_indikator', 141);
         }
 
+        if($is_metadata){
+            $this->db->where("JSON_EXTRACT(vi.metadata, '$.konsep') <> ''");            
+            $this->db->where("JSON_EXTRACT(vi.metadata, '$.metodologi') <> ''");            
+            $this->db->where("JSON_EXTRACT(vi.metadata, '$.teknik_pengumpulan') <> ''");
+            $this->db->where("JSON_EXTRACT(vi.metadata, '$.nomor_romantik') <> ''");
+            $this->db->where("JSON_EXTRACT(vi.metadata, '$.nomor_sdsn') <> ''");
+        }
+
         $result = $this->db->get('v_indikator vi')->result_array();
         return $result;
     }
@@ -114,9 +122,9 @@ class Indikator_model extends CI_Model
             $where = [['id_skpd' => $id_skpd], ['main_id_skpd' => $id_skpd]];
         }
 
-        $this->db->select('vd.tahun, vd.id_skpd, vd.main_id_skpd, COUNT(*) AS jumlah');
+        $this->db->select('idk.metadata, vd.tahun, vd.id_skpd, vd.main_id_skpd');
 
-        $this->db->group_by('tahun');
+        // $this->db->group_by('tahun');
         if ($id_tagar != null) {
             // Jika id_tagar tidak null, tambahkan kondisi where untuk id_tagar
             $this->db->join('tagar_indikator viii', 'vd.id_indikator = viii.id_ind', 'right');
@@ -128,23 +136,51 @@ class Indikator_model extends CI_Model
             $this->db->where($where[0]);
             $this->db->or_where($where[1]);
         }
-        $data = $this->db->get('v_data_full vd')->result_array();
 
-        $tahun = $this->get_tahun();
-        $result = [];
-        foreach ($tahun as $kt => $vt) {
-            $result[$vt['nama_tahun']] = 0;
-            foreach ($data as $kd => $vd) {
-                if ($vd['tahun'] == $vt['nama_tahun']) {
-                    $result[$vt['nama_tahun']] = $vd['jumlah'];
-                    break;
-                }
+        $this->db->join('indikator idk', 'vd.id_indikator = idk.id_indikator', 'left');
+
+        $this->db->where("JSON_EXTRACT(idk.metadata, '$.konsep') <> ''");            
+        $this->db->where("JSON_EXTRACT(idk.metadata, '$.metodologi') <> ''");            
+        $this->db->where("JSON_EXTRACT(idk.metadata, '$.teknik_pengumpulan') <> ''");
+        $this->db->where("JSON_EXTRACT(idk.metadata, '$.nomor_romantik') <> ''");
+        $this->db->where("JSON_EXTRACT(idk.metadata, '$.nomor_sdsn') <> ''");
+
+        $data = $this->db->get('v_data_full vd')->result_array();
+        
+        // return $data;
+
+        // $tahun = $this->get_tahun();
+        // $result = [];
+        // foreach ($tahun as $kt => $vt) {
+        //     $result[$vt['nama_tahun']] = 0;
+        //     foreach ($data as $kd => $vd) {
+        //         if ($vd['tahun'] == $vt['nama_tahun']) {
+        //             $result[$vt['nama_tahun']] = $vd['jumlah'];
+        //             break;
+        //         }
+        //     }
+        // }
+
+        // return $result;
+
+        $countsByYear = [];
+
+        // Loop through each data entry
+        foreach ($data as $item) {
+            // Get the year value
+            $year = $item['tahun'] ?? 'unknown';
+            
+            // Initialize the count for this year if it doesn't exist
+            if (!isset($countsByYear[$year])) {
+                $countsByYear[$year] = 0;
             }
+            
+            // Increment the count for this year
+            $countsByYear[$year]++;
         }
 
-        return $result;
+        return $countsByYear;
 
-        // var_dump($result);
     }
 
     function get_count_data_ver($id_skpd)
@@ -398,8 +434,10 @@ class Indikator_model extends CI_Model
 
     public function get_rekap_input($id = null, $idt = null)
     {
+        // $id = id_skpd $idt = id_tagar
+        
         $cnt_tahun = count($this->get_tahun());
-        $cnt_indikator = count($this->get_all_indikator($id, $idt));
+        $cnt_indikator = count($this->get_all_indikator($id, $idt, true));
         $cnt_data = $this->get_count_data($id, $idt);
 
         if ($cnt_indikator == 0) {
@@ -720,15 +758,12 @@ class Indikator_model extends CI_Model
 
         if ($params['type'] == 'input') {
             $where['status_konfirmasi'] = '1';
+            $where['level'] = '1';
 
-            $this->db->where("JSON_EXTRACT(metadata, '$.konsep') <> ''");
-            
-            $this->db->where("JSON_EXTRACT(metadata, '$.metodologi') <> ''");
-            
+            $this->db->where("JSON_EXTRACT(metadata, '$.konsep') <> ''");            
+            $this->db->where("JSON_EXTRACT(metadata, '$.metodologi') <> ''");            
             $this->db->where("JSON_EXTRACT(metadata, '$.teknik_pengumpulan') <> ''");
-
             $this->db->where("JSON_EXTRACT(metadata, '$.nomor_romantik') <> ''");
-
             $this->db->where("JSON_EXTRACT(metadata, '$.nomor_sdsn') <> ''");
         }
 
