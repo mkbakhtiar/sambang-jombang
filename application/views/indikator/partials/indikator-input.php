@@ -139,6 +139,7 @@
                                                 <th>Catatan Data</th>
                                                 <th>Update Terakhir</th>
                                                 <th>Status Verifikasi</th>
+                                                <th>Status Data</th>
                                                 <th>Catatan Verifikasi</th>
                                                 <th>Aksi</th>
                                             </tr>

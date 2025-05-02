@@ -51,7 +51,6 @@
                         </div>
                     </div>
                 <?php endif; ?>
-
                 <div class="row">
                     <div class="col-lg-4">
                         <div class="card border border-primary">
@@ -59,7 +58,7 @@
                                 <h5 class="my-0 text-light"><i class="mdi mdi-bullseye-arrow me-3"></i>Indikator</h5>
                             </div>
                             <div class="card-body text-center">
-                                <h3 class=""><?= $props['stats_indikator']['konfirmasi_ok']; ?></h3>
+                                <h3 class=""><?= $props['stats_indikator']['konfirmasi_ok'] ?? 0; ?></h3>
                             </div>
                         </div>
                     </div>

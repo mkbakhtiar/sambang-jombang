@@ -15,6 +15,40 @@
         background-color: #dde0e3;
         cursor: pointer;
     }
+
+    /* Status button styles */
+    .status-btn-group {
+        margin-bottom: 1rem;
+    }
+    
+    .status-btn {
+        border: 1px solid #ced4da;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.25rem;
+        margin-right: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .status-btn.active {
+        color: white;
+        font-weight: bold;
+    }
+    
+    .status-btn-sangat-sementara.active {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    .status-btn-sementara.active {
+        background-color: #fd7e14;
+        border-color: #fd7e14;
+    }
+    
+    .status-btn-final.active {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
 </style>
 
 <?= form_open('', [
@@ -54,6 +88,21 @@
     <div class="input-group custom-file-button">
         <label class="input-group-text" for="file">Data File</label>
         <input class="form-control" type="file" id="file" name="file">
+    </div>
+</div>
+
+<!-- Status field with button-style options -->
+<div class="mb-3">
+    <label class="form-label">Status Data</label>
+    <div class="status-btn-group">
+        <input type="radio" name="status_data" id="status-sangat-sementara" value="sangat_sementara" class="d-none" <?= $props['edit'] && isset($props['cur_data']['status_data']) && $props['cur_data']['status_data'] == 'sangat_sementara' ? 'checked' : '' ?>>
+        <label for="status-sangat-sementara" class="status-btn status-btn-sangat-sementara <?= $props['edit'] && isset($props['cur_data']['status_data']) && $props['cur_data']['status_data'] == 'sangat_sementara' ? 'active' : '' ?>">Sangat Sementara</label>
+        
+        <input type="radio" name="status_data" id="status-sementara" value="sementara" class="d-none" <?= $props['edit'] && isset($props['cur_data']['status_data']) && $props['cur_data']['status_data'] == 'sementara' ? 'checked' : '' ?>>
+        <label for="status-sementara" class="status-btn status-btn-sementara <?= $props['edit'] && isset($props['cur_data']['status_data']) && $props['cur_data']['status_data'] == 'sementara' ? 'active' : '' ?>">Sementara</label>
+        
+        <input type="radio" name="status_data" id="status-final" value="final" class="d-none" <?= $props['edit'] && isset($props['cur_data']['status_data']) && $props['cur_data']['status_data'] == 'final' ? 'checked' : '' ?>>
+        <label for="status-final" class="status-btn status-btn-final <?= $props['edit'] && isset($props['cur_data']['status_data']) && $props['cur_data']['status_data'] == 'final' ? 'active' : '' ?>">Final</label>
     </div>
 </div>
 
@@ -118,6 +167,16 @@
                 $('#data-angka').val();
                 $('#data-angka').attr('readonly', false);
             }
+        });
+
+        // Status button functionality
+        $('.status-btn').on('click', function() {
+            // Remove active class from all buttons
+            $('.status-btn').removeClass('active');
+            // Add active class to clicked button
+            $(this).addClass('active');
+            // Check the associated radio button
+            $(this).prev('input[type=radio]').prop('checked', true);
         });
     });
 </script>

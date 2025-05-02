@@ -250,7 +250,48 @@ class Indikator_model extends CI_Model
 
     public function get_indikator_data($id = null)
     {
-        $query = "SELECT * FROM (SELECT t.nama_tahun, dt.* FROM tbl_tahun t LEFT JOIN ( SELECT df.id_data, df.id_indikator, df.id_verifikasi, df.data_angka, df.data_file, df.`timestamp`, df.status_verifikasi, df.keterangan, df.tahun FROM v_data_full df, ( SELECT tahun, max( `timestamp` ) AS `timestamp` FROM data WHERE id_indikator = '" . $id . "' GROUP BY tahun ) max_ts WHERE df.tahun = max_ts.tahun AND df.`timestamp` = max_ts.`timestamp` ) dt ON t.nama_tahun = dt.tahun WHERE t.status = '1' ORDER BY nama_tahun) f GROUP BY f.nama_tahun";
+        $query = "SELECT * FROM (
+                    SELECT 
+                        t.nama_tahun, 
+                        dt.* 
+                    FROM 
+                        tbl_tahun t 
+                    LEFT JOIN (
+                        SELECT 
+                            df.id_data, 
+                            df.id_indikator, 
+                            df.id_verifikasi, 
+                            df.data_angka, 
+                            df.data_file, 
+                            df.`timestamp`, 
+                            df.status_verifikasi, 
+                            df.keterangan, 
+                            df.tahun,
+                            df.status_data
+                        FROM 
+                            v_data_full df, 
+                            (
+                                SELECT 
+                                    tahun, 
+                                    max(`timestamp`) AS `timestamp` 
+                                FROM 
+                                    data 
+                                WHERE 
+                                    id_indikator = '" . $id . "' 
+                                GROUP BY 
+                                    tahun
+                            ) max_ts 
+                        WHERE 
+                            df.tahun = max_ts.tahun 
+                            AND df.`timestamp` = max_ts.`timestamp`
+                    ) dt ON t.nama_tahun = dt.tahun 
+                    WHERE 
+                        t.status = '1' 
+                    ORDER BY 
+                        nama_tahun
+                ) f 
+                GROUP BY 
+                    f.nama_tahun";
 
         $raw = $this->db->query($query)->result_array();
         return $raw;
@@ -281,17 +322,29 @@ class Indikator_model extends CI_Model
 
     public function get_rekap_konfirmasi($id_skpd = null, $id_tagar = null)
     {
-        // Selalu lakukan join dengan tabel tagar_indikator menggunakan id_skpd
-
-        // Jika id_tagar tidak null, tambahkan kondisi where untuk id_tagar
-        // if ($id_tagar !== null) {
-        //     $this->db->where('tagar_indikator.id_tagar', $id_tagar);
-        //     $this->db->join('tagar_indikator', 'v_indikator_konfirmasi_rekap.id_skpd = tagar_indikator.id_ind', 'left');
-        // }
-
+        
         if ($id_skpd !== null && $id_skpd !== 'all') {
-            // Lakukan join dengan tabel tagar_indikator
+            
             $this->db->join('tagar_indikator', 'v_indikator_konfirmasi_rekap.id_skpd = tagar_indikator.id_ind', 'left');
+            // $this->db->join('indikator idk', 'tagar_indikator.id_ind = idk.id_indikator', 'left');
+            
+            // Tambahkan kondisi JSON_EXTRACT dengan referensi ke indikator.metadata
+            // $this->db->where("JSON_EXTRACT(idk.metadata, '$.konsep') != ''");
+            // $this->db->where("JSON_EXTRACT(idk.metadata, '$.konsep') IS NOT NULL");
+            
+            // $this->db->where("JSON_EXTRACT(idk.metadata, '$.metodologi') != ''");
+            // $this->db->where("JSON_EXTRACT(idk.metadata, '$.metodologi') IS NOT NULL");
+            
+            // $this->db->where("JSON_EXTRACT(idk.metadata, '$.teknik_pengumpulan') != ''");
+            // $this->db->where("JSON_EXTRACT(idk.metadata, '$.teknik_pengumpulan') IS NOT NULL");
+
+            // $this->db->where("JSON_EXTRACT(idk.metadata, '$.nomor_romantik') != ''");
+            // $this->db->where("JSON_EXTRACT(idk.metadata, '$.nomor_romantik') IS NOT NULL");
+
+            // $this->db->where("JSON_EXTRACT(idk.metadata, '$.nomor_sdsn') != ''");
+            // $this->db->where("JSON_EXTRACT(idk.metadata, '$.nomor_sdsn') IS NOT NULL");
+            
+            // Join dengan tabel tagar_indikator dan indikator
 
             // Tambahkan kondisi where untuk id_tagar jika ada
             if ($id_tagar !== null) {
@@ -315,11 +368,8 @@ class Indikator_model extends CI_Model
                 SUM(vr.konfirmasi_not_ok) AS konfirmasi_not_ok
             ');
 
-
             // Eksekusi query dan ambil hasilnya
             $rest = $this->db->get('v_indikator_konfirmasi_rekap vr')->row_array();
-
-            // $rest = $this->db->get('v_indikator_konfirmasi_rekap vr')->row_array();
         }
 
         return $rest;
@@ -658,9 +708,7 @@ class Indikator_model extends CI_Model
 
     function build_ind_datatables_input($params)
     {
-        $where = array(
-            // 'id_main_indikator' => $params['id_indikator']
-        );
+        $where = array();
 
         if ($params['id_skpd'] != null) {
             $where['id_skpd'] = $params['id_skpd'];
@@ -672,15 +720,29 @@ class Indikator_model extends CI_Model
 
         if ($params['type'] == 'input') {
             $where['status_konfirmasi'] = '1';
+
+            $this->db->where("JSON_EXTRACT(metadata, '$.konsep') <> ''");
+            
+            $this->db->where("JSON_EXTRACT(metadata, '$.metodologi') <> ''");
+            
+            $this->db->where("JSON_EXTRACT(metadata, '$.teknik_pengumpulan') <> ''");
+
+            $this->db->where("JSON_EXTRACT(metadata, '$.nomor_romantik') <> ''");
+
+            $this->db->where("JSON_EXTRACT(metadata, '$.nomor_sdsn') <> ''");
         }
+
+        // Get form parameters
         $draw = intval($this->input->post("draw"));
         $start = intval($this->input->post("start"));
         $length = intval($this->input->post("length"));
         $order = $this->input->post("order");
         $search = $this->input->post("search");
         $search = $search['value'];
+
+        // Handle ordering
         $col = 0;
-        $dir = "";
+        $dir = "desc"; // Default direction
         if (!empty($order)) {
             foreach ($order as $o) {
                 $col = $o['column'];
@@ -691,17 +753,32 @@ class Indikator_model extends CI_Model
         if ($dir != "asc" && $dir != "desc") {
             $dir = "desc";
         }
+        
         $valid_columns = $params['columns'];
         if (!isset($valid_columns[$col])) {
             $order = null;
         } else {
             $order = $valid_columns[$col];
         }
+        
         if ($order != null) {
             $this->db->order_by($order, $dir);
         }
 
+        // Join tables first
+        $this->db->join('tagar_indikator', 'v_indikator.id_indikator = tagar_indikator.id_ind', 'left');
+
+        // Apply WHERE conditions
+        $this->db->where($where);
+        
+        // Add condition for `id_tagar` in the join table
+        if (isset($params['id_tagar'])) {
+            $this->db->where('tagar_indikator.id_tagar', $params['id_tagar']);
+        }
+
+        // Apply search within the id_skpd constraint
         if (!empty($search)) {
+            $this->db->group_start(); // Start a parenthesis group for all the OR conditions
             $x = 0;
             foreach ($valid_columns as $sterm) {
                 if ($x == 0) {
@@ -711,45 +788,27 @@ class Indikator_model extends CI_Model
                 }
                 $x++;
             }
+            $this->db->group_end(); // End the parenthesis group
         }
 
-        // $this->db->limit($length, $start);
+        // Get total records WITHOUT filtering
+        $total_query = clone $this->db;
+        $total_query->select('COUNT(DISTINCT v_indikator.id_indikator) as total');
+        $total_records = $total_query->get($params['table'])->row()->total;
 
-        // // Corrected join statement
-        // $this->db->join('tagar_indikator', 'v_indikator.id_indikator = tagar_indikator.id_ind', 'left');
+        // Get filtered records count (search already applied above)
+        $filtered_query = clone $this->db;
+        $filtered_query->select('COUNT(DISTINCT v_indikator.id_indikator) as total');
+        $total_filtered = $filtered_query->get($params['table'])->row()->total;
 
-        // // Add condition for `id_tagar` in the join table
-        // if (isset($params['id_tagar'])) {
-        //     $this->db->where('tagar_indikator.id_tagar', $params['id_tagar']);
-        // }
-        // Corrected join statement
-        $this->db->join('tagar_indikator', 'v_indikator.id_indikator = tagar_indikator.id_ind', 'left');
-
-        // Add condition for `id_tagar` in the join table
-        if (isset($params['id_tagar'])) {
-            $this->db->where('tagar_indikator.id_tagar', $params['id_tagar']);
-        }
-
-        // Setelah konstruksi WHERE clause, tambahkan GROUP BY jika diperlukan
-
-
-        // Copy the active query for later use
-        $sub_query = clone $this->db;
-
-        // Execute the query with the constructed where clause
-        $this->db->limit($length, $start);
+        // Get the actual data with GROUP BY, ORDER BY and LIMIT
         $this->db->group_by('v_indikator.id_indikator');
-
-        $raw_data = $this->db->where($where)->get($params['table']);
-        $data = array();
-
-        // // Execute the query with the constructed where clause
-        // $raw_data = $this->db->where($where)->get($params['table']);
-        // $data = array();
-
-        // var_dump($raw_data);
+        $this->db->limit($length, $start);
+        $raw_data = $this->db->get($params['table']);
         
+        $data = array();
         $no = $start + 1;
+        
         foreach ($raw_data->result_array() as $rows) {
             $row = [$no++];
             $id = $rows[$params['columns'][0]];
@@ -759,11 +818,13 @@ class Indikator_model extends CI_Model
                 'color' => ($rows['status_konfirmasi'] == '1' ? 'btn-success' : ($rows['status_konfirmasi'] == '2' ? 'btn-danger' : 'btn-warning')),
                 'text' => ($rows['status_konfirmasi'] == '1' ? 'Tersedia' : ($rows['status_konfirmasi'] == '2' ? 'Tidak Tersedia' : 'Konfirmasi'))
             );
+            
             foreach ($params['columns'] as $kc => $kv) {
                 if ($kc != 0) {
                     $row[] = $rows[$kv];
                 }
             }
+            
             $tagar = $this->get_tagar($rows['id_indikator']);
             if (!empty($tagar)) {
                 $tagar_html = '';
@@ -772,9 +833,8 @@ class Indikator_model extends CI_Model
                 }
                 $row[] = $tagar_html;
             } else {
-                $row[] = ''; // Atau sesuaikan dengan penanganan khusus jika tidak ada tagar ditemukan
+                $row[] = '';
             }
-
 
             $row[] = [
                 '<div class="d-grid gap-1 d-md-flex justify-content-md-center">' .
@@ -782,42 +842,19 @@ class Indikator_model extends CI_Model
                 '<button class="btn btn-sm btn-info btn-detail" data-id="' . $encrypted_id . '" data-toggle="tooltip" data-placement="top" title="Detail"><i class="far fa-eye"></i> Lihat</button></div>'
             ];
 
-            // Show Metadata
+            $row[] = $rows['metadata'];
+            $row[] = $rows['status_konfirmasi'];
 
-            $rmetadata = !empty($row['metadata']) ? json_decode($row['metadata'], true) : [];
-            $colmd = $this->get_metadata_cols();
-            foreach ($colmd as $key => $value) {
-                $metadata[$value['key_metadata']] = isset($rmetadata[$value['key_metadata']]) ? $rmetadata[$value['key_metadata']] : null;
-                $colmd[$key]['value'] = isset($rmetadata[$value['key_metadata']]) ? $rmetadata[$value['key_metadata']] : null;
-            }
-
-            // Cek apakah ada nilai kosong dalam metadata
-            $metadataIsEmpty = false;
-            foreach ($metadata as $value) {
-                if ($value === null || $value === "") {
-                    $metadataIsEmpty = true;
-                    break;
-                }
-            }
-
-            if (!$metadataIsEmpty) {
-                $row[] = "LENGKAP"; // Semua data metadata terisi penuh
-                $data[] = $row;
-            } else {
-                $row[] = "TIDAK LENGKAP"; // Ada data metadata yang kosong
-            }
-
+            $data[] = $row;
         }
-        // Use the copied active query to count the total data
-        $total_data_query = $sub_query->select("COUNT(*) as num")->where($where)->get($params['table']);
-        $total_data = $total_data_query->row()->num;
-        // $total_data = $this->db->select("COUNT(*) as num")->where($where)->get($params['table'])->row()->num;
+
         $output = array(
             "draw" => $draw,
-            "recordsTotal" => $total_data,
-            "recordsFiltered" => $total_data,
+            "recordsTotal" => $total_records,
+            "recordsFiltered" => $total_filtered,
             "data" => $data
         );
+
         return $output;
     }
 
@@ -1019,7 +1056,7 @@ class Indikator_model extends CI_Model
         if ($dir != "asc" && $dir != "desc") {
             $dir = "desc";
         }
-        $valid_columns = ['nama_tahun', 'data_angka', 'data_file', 'timestamp', 'aksi'];
+        $valid_columns = ['nama_tahun', 'data_angka', 'status_data', 'data_file', 'timestamp', 'aksi'];
         if (!isset($valid_columns[$col])) {
             $order = null;
         } else {
@@ -1064,6 +1101,23 @@ class Indikator_model extends CI_Model
                 $stvr = null;
             }
             ;
+
+            if($rows['status_data'] !== null){
+                switch ($rows['status_data']) {
+                    case 'sangat_sementara':
+                        $status_data = '<button class="btn btn-sm btn-danger" >Sangat Sementara</button>';
+                        break;
+                    case 'sementara':
+                        $status_data = '<button class="btn btn-sm btn-warning" >Sementara</button>';
+                        break;
+                    case 'final':
+                        $status_data = '<button class="btn btn-sm btn-success" >Final</button>';
+                        break;
+                }
+            } else{
+                $status_data = '-';
+            }
+
             $row = [
                 $rows['nama_tahun'],
                 $rows['data_angka'],
@@ -1071,6 +1125,7 @@ class Indikator_model extends CI_Model
                 $rows['catatan'],
                 $rows['timestamp'],
                 $stvr,
+                $status_data,
                 $rows['keterangan'],
             ];
 
@@ -1331,6 +1386,7 @@ class Indikator_model extends CI_Model
             'id_indikator' => encrypt_url(false, $data['id_indikator']),
             'data_angka' => $data['data-angka'],
             'catatan' => $data['catatan'],
+            'status_data' => $data['status_data'],
             // 'data_file' => $data['data_file'],
             'tahun' => $data['tahun']
         );
@@ -1353,10 +1409,35 @@ class Indikator_model extends CI_Model
             }
         }
 
-
         $input = $this->db->insert('data', $input_data);
+        $id = $this->db->insert_id(); // Get the inserted ID
 
         if ($input) {
+            // If status is "final", automatically insert into data_verifikasi
+            if ($data['status_data'] == 'final') {
+                $insert_data = array(
+                    'id_data' => $id,
+                    'status_verifikasi' => '1',
+                    'lock_data' => '1',
+                    'keterangan' => $data['catatan']
+                );
+                
+                $submit = $this->db->insert('data_verifikasi', $insert_data);
+
+                $id_verifikasi = $this->db->insert_id(); // Get the verification ID
+
+                // Update the data table with the verification ID
+                $this->db->where('id_data', $id);
+                $this->db->update('data', array('id_verifikasi' => $id_verifikasi));
+                
+                // Check if the verification data was inserted successfully
+                if (!$submit) {
+                    // You might want to handle this error case
+                    // Perhaps log it or add it to the response message
+                    $msg .= ' but verification data insert failed';
+                }
+            }
+            
             $result = array(
                 'success' => true,
                 'msg' => $data

@@ -26,7 +26,50 @@ class Front_model extends CI_Model
 	public function get_indikator_data($id = null)
 	{
 		// $query = "SELECT DISTINCTROW t.nama_tahun, dt.* FROM tbl_tahun t LEFT JOIN ( SELECT df.id_data, df.id_indikator, df.id_verifikasi, df.data_angka, df.data_file, df.`timestamp`, df.status_verifikasi, df.keterangan, df.tahun FROM v_data_full df, ( SELECT tahun, max( `timestamp` ) AS `timestamp` FROM data WHERE id_indikator = '" . $id . "' GROUP BY tahun ) max_ts WHERE df.tahun = max_ts.tahun AND df.`timestamp` = max_ts.`timestamp` AND df.status_verifikasi = '1' ) dt ON t.nama_tahun = dt.tahun WHERE t.status = '1' ORDER BY nama_tahun";
-		$query = "SELECT d.* FROM (SELECT DISTINCTROW t.nama_tahun, dt.* FROM tbl_tahun t LEFT JOIN (SELECT df.id_data, df.id_indikator, df.id_verifikasi, df.data_angka, df.data_file, df.`timestamp`, df.status_verifikasi, df.keterangan, df.tahun FROM v_data_full df, ( SELECT tahun, max( `timestamp` ) AS `timestamp` FROM data WHERE id_indikator = '" . $id . "' GROUP BY tahun ) max_ts WHERE df.tahun = max_ts.tahun AND df.`timestamp` = max_ts.`timestamp` AND df.status_verifikasi = '1' ) dt ON t.nama_tahun = dt.tahun WHERE t.STATUS = '1' ORDER BY nama_tahun ASC, id_data DESC ) d GROUP BY d.nama_tahun";
+		$query = "SELECT d.* FROM (
+					SELECT DISTINCTROW 
+						t.nama_tahun, 
+						dt.* 
+					FROM 
+						tbl_tahun t 
+					LEFT JOIN (
+						SELECT 
+							df.id_data, 
+							df.id_indikator, 
+							df.id_verifikasi, 
+							df.data_angka, 
+							df.data_file, 
+							df.`timestamp`, 
+							df.status_verifikasi, 
+							df.keterangan, 
+							df.tahun,
+							df.status_data
+						FROM 
+							v_data_full df, 
+							(
+								SELECT 
+									tahun, 
+									max(`timestamp`) AS `timestamp` 
+								FROM 
+									data 
+								WHERE 
+									id_indikator = '" . $id . "' 
+								GROUP BY 
+									tahun
+							) max_ts 
+						WHERE 
+							df.tahun = max_ts.tahun 
+							AND df.`timestamp` = max_ts.`timestamp` 
+							AND df.status_verifikasi = '1'
+					) dt ON t.nama_tahun = dt.tahun 
+					WHERE 
+						t.STATUS = '1' 
+					ORDER BY 
+						nama_tahun ASC, 
+						id_data DESC
+				) d 
+				GROUP BY 
+					d.nama_tahun";
 		$raw = $this->db->query($query)->result_array();
 		return $raw;
 	}
