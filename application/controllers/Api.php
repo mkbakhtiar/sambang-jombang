@@ -60,8 +60,6 @@ class Api extends CI_Controller
 			$this->fmd->insertOrUpdateData($data_to_insert);
 		}       
 
-		var_dump($data);
-
 		// Mengembalikan array asosiatif jumlah pasien berdasarkan jenis kelamin, tujuan pelayanan, dan umur
 		return $jumlah_data;
 	}

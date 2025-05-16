@@ -1,11 +1,11 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require APPPATH . 'libraries/REST_Controller.php';
+require APPPATH . 'libraries/RestController.php';
 require APPPATH . 'libraries/Format.php';
-use Restserver\Libraries\REST_Controller;
+use chriskacerguis\RestServer\RestController;
 
-class Users extends REST_Controller {
+class Users extends RestController {
 
     public function __construct() {
         parent::__construct();
@@ -13,7 +13,7 @@ class Users extends REST_Controller {
         $this->load->library('jwt_auth');
         
         // Terapkan middleware JWT pada semua method kecuali yang dikecualikan
-        $excluded_methods = ['login', 'register'];
+        $excluded_methods = ['login'];
         if (!in_array($this->router->fetch_method(), $excluded_methods)) {
             $this->jwt_auth->auth_check();
         }

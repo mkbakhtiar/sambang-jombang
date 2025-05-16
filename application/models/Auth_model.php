@@ -476,9 +476,8 @@ class Auth_model extends CI_Model
     }
 
 	public function check_credentials($username, $password) {
-        $this->db->from($this->table);
+        $this->db->from($this->_table);
         $this->db->where('username', $username);
-        $this->db->where('status', 1); // Only active users
         $query = $this->db->get();
         
         if ($query->num_rows() === 0) {
@@ -487,12 +486,21 @@ class Auth_model extends CI_Model
         
         $user = $query->row();
         
-        if (password_verify(md5($password), $user->password)) {
+        if ($this->verify_md5_password($password, $user->password)) {
             // Update last login time
             $this->update_last_login($user->id_user);
             return $user;
         }
         
         return false;
+    }
+
+    function verify_md5_password($password, $stored_hash) {
+        // Pastikan password di-MD5 terlebih dahulu karena itu yang disimpan di database
+        $md5_password = md5($password);
+        
+        // Kemudian verifikasi dengan hash yang disimpan 
+        // menggunakan constant-time comparison untuk keamanan
+        return hash_equals($stored_hash, $md5_password);
     }
 }

@@ -54,9 +54,10 @@ $route['404_override'] = 'oops/not_found';
 $route['translate_uri_dashes'] = FALSE;
 
 // Routes untuk API Autentikasi
-$route['api/auth/login'] = 'api/auth/login';
-$route['api/auth/check'] = 'api/auth/check_token';
+$route['api/test'] = 'v2/api/auth/test';
+$route['api/login'] = 'v2/api/auth/login';
+$route['api/check'] = 'v2/api/auth/check_token';
 
 // Contoh routes untuk API lainnya yang memerlukan autentikasi
-$route['api/users'] = 'api/users/index';
-$route['api/users/(:num)'] = 'api/users/detail/$1';
+$route['api/users'] = 'v2/api/user/list_get';
+$route['api/users/(:num)'] = 'v2/api/user/detail_get/$1';
