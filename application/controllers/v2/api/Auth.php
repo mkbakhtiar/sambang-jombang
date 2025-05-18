@@ -8,17 +8,72 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Auth extends CI_Controller {
     protected $response = [];
     protected $user_data = [];
+    protected $input_data = [];
     
     public function __construct() {
         parent::__construct();
         $this->load->model('Auth_model');
-        $this->load->helper('v2_api_helper'); // Load helper untuk fungsi-fungsi API
+        $this->load->library('jwt_auth');
+        // $this->load->helper('v2_api_helper'); // Load helper untuk fungsi-fungsi API
         
         // Enable CORS
         $this->_enable_cors();
         
         // Set default content type to JSON
         $this->output->set_content_type('application/json');
+        
+        // Parse input data from various sources
+        $this->_parse_input_data();
+    }
+
+    /**
+     * Parse input data from various sources (JSON, POST, etc.)
+     */
+    private function _parse_input_data() {
+        // Check for JSON input
+        $content_type = $this->input->server('CONTENT_TYPE');
+        if (strpos($content_type, 'application/json') !== false) {
+            $raw_input = file_get_contents('php://input');
+            if (!empty($raw_input)) {
+                $json_data = json_decode($raw_input, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($json_data)) {
+                    $this->input_data = $json_data;
+                    
+                    // Also set to $_POST for compatibility with CI input class
+                    foreach ($json_data as $key => $value) {
+                        $_POST[$key] = $value;
+                    }
+                }
+            }
+        }
+        
+        // If no JSON data, try to get from regular POST
+        if (empty($this->input_data)) {
+            $this->input_data = $this->input->post();
+        }
+        
+        // If still empty, try to get from GET (for some cases)
+        if (empty($this->input_data)) {
+            $this->input_data = $this->input->get();
+        }
+        
+        // Log the input data for debugging (remove in production)
+        log_message('debug', 'Input data: ' . print_r($this->input_data, true));
+    }
+
+    /**
+     * Custom method to get input data
+     * 
+     * @param string $key Input key
+     * @param mixed $default Default value if key not found
+     * @return mixed
+     */
+    protected function get_input($key = null, $default = null) {
+        if ($key === null) {
+            return $this->input_data;
+        }
+        
+        return isset($this->input_data[$key]) ? $this->input_data[$key] : $default;
     }
 
     /**
@@ -40,7 +95,8 @@ class Auth extends CI_Controller {
             'status' => TRUE,
             'message' => 'API test successful',
             'data' => [
-                'timestamp' => time()
+                'timestamp' => time(),
+                'received_data' => $this->get_input()
             ]
         ];
         
@@ -51,20 +107,6 @@ class Auth extends CI_Controller {
      * Endpoint untuk login dan mendapatkan token
      */
     public function login() {
-        // Parse JSON input jika content type adalah application/json
-        $content_type = $this->input->server('CONTENT_TYPE');
-        if (strpos($content_type, 'application/json') !== false) {
-            $raw_input = file_get_contents('php://input');
-            $json_data = json_decode($raw_input, true);
-            
-            // Set data JSON ke $_POST agar bisa diakses dengan $this->input->post()
-            if (is_array($json_data)) {
-                foreach ($json_data as $key => $value) {
-                    $_POST[$key] = $value;
-                }
-            }
-        }
-        
         // Validasi input
         $rules = array(
             array(
@@ -83,8 +125,8 @@ class Auth extends CI_Controller {
         }
         
         // Proses login
-        $username = $this->input->post('username');
-        $password = $this->input->post('password');
+        $username = $this->get_input('username');
+        $password = $this->get_input('password');
         
         $user = $this->Auth_model->check_credentials($username, $password);
         
@@ -107,7 +149,7 @@ class Auth extends CI_Controller {
         );
         
         // Generate token
-        $token = generate_jwt_token($token_data);
+        $token = $this->jwt_auth->generate_token($token_data);
         
         // Kembalikan token
         $this->response = array(
@@ -150,13 +192,12 @@ class Auth extends CI_Controller {
         foreach ($rules as $rule) {
             $field = $rule['field'];
             $label = isset($rule['label']) ? $rule['label'] : ucfirst($field);
-            $value = $this->input->post($field);
+            $value = $this->get_input($field);
             
             // Validasi field tidak boleh kosong
             if (empty($value) && $value !== '0') {
                 $errors[$field] = "$label tidak boleh kosong";
             }
-            
         }
         
         if (!empty($errors)) {

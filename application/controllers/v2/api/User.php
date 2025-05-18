@@ -5,7 +5,7 @@ require APPPATH . 'libraries/RestController.php';
 require APPPATH . 'libraries/Format.php';
 use chriskacerguis\RestServer\RestController;
 
-class Users extends RestController {
+class User extends RestController {
 
     public function __construct() {
         parent::__construct();
@@ -35,12 +35,12 @@ class Users extends RestController {
                 'status' => true,
                 'message' => 'Daftar user berhasil diambil',
                 'data' => $users
-            ], REST_Controller::HTTP_OK);
+            ], RestController::HTTP_OK);
         } else {
             $this->response([
                 'status' => false,
                 'message' => 'Tidak ada data user'
-            ], REST_Controller::HTTP_NOT_FOUND);
+            ], RestController::HTTP_NOT_FOUND);
         }
     }
 
@@ -55,7 +55,7 @@ class Users extends RestController {
             $this->response([
                 'status' => false,
                 'message' => 'ID user diperlukan'
-            ], REST_Controller::HTTP_BAD_REQUEST);
+            ], RestController::HTTP_BAD_REQUEST);
             return;
         }
         
@@ -64,7 +64,7 @@ class Users extends RestController {
             $this->response([
                 'status' => false,
                 'message' => 'Anda tidak memiliki akses untuk melihat data user ini'
-            ], REST_Controller::HTTP_FORBIDDEN);
+            ], RestController::HTTP_FORBIDDEN);
             return;
         }
         
@@ -75,12 +75,12 @@ class Users extends RestController {
                 'status' => true,
                 'message' => 'Detail user berhasil diambil',
                 'data' => $user
-            ], REST_Controller::HTTP_OK);
+            ], RestController::HTTP_OK);
         } else {
             $this->response([
                 'status' => false,
                 'message' => 'User tidak ditemukan'
-            ], REST_Controller::HTTP_NOT_FOUND);
+            ], RestController::HTTP_NOT_FOUND);
         }
     }
 
@@ -95,7 +95,7 @@ class Users extends RestController {
             $this->response([
                 'status' => false,
                 'message' => 'ID user diperlukan'
-            ], REST_Controller::HTTP_BAD_REQUEST);
+            ], RestController::HTTP_BAD_REQUEST);
             return;
         }
         
@@ -104,7 +104,7 @@ class Users extends RestController {
             $this->response([
                 'status' => false,
                 'message' => 'Anda tidak memiliki akses untuk mengubah data user ini'
-            ], REST_Controller::HTTP_FORBIDDEN);
+            ], RestController::HTTP_FORBIDDEN);
             return;
         }
         
@@ -141,7 +141,7 @@ class Users extends RestController {
             $this->response([
                 'status' => false,
                 'message' => 'Tidak ada data yang diupdate'
-            ], REST_Controller::HTTP_BAD_REQUEST);
+            ], RestController::HTTP_BAD_REQUEST);
             return;
         }
         
@@ -151,12 +151,12 @@ class Users extends RestController {
             $this->response([
                 'status' => true,
                 'message' => 'Data user berhasil diupdate'
-            ], REST_Controller::HTTP_OK);
+            ], RestController::HTTP_OK);
         } else {
             $this->response([
                 'status' => false,
                 'message' => 'Gagal mengupdate data user'
-            ], REST_Controller::HTTP_INTERNAL_SERVER_ERROR);
+            ], RestController::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -176,7 +176,7 @@ class Users extends RestController {
             $this->response([
                 'status' => false,
                 'message' => 'Semua field harus diisi'
-            ], REST_Controller::HTTP_BAD_REQUEST);
+            ], RestController::HTTP_BAD_REQUEST);
             return;
         }
         
@@ -185,7 +185,7 @@ class Users extends RestController {
             $this->response([
                 'status' => false,
                 'message' => 'Anda tidak memiliki akses untuk mengubah password user ini'
-            ], REST_Controller::HTTP_FORBIDDEN);
+            ], RestController::HTTP_FORBIDDEN);
             return;
         }
         
@@ -194,7 +194,7 @@ class Users extends RestController {
             $this->response([
                 'status' => false,
                 'message' => 'Konfirmasi password tidak sesuai'
-            ], REST_Controller::HTTP_BAD_REQUEST);
+            ], RestController::HTTP_BAD_REQUEST);
             return;
         }
         
@@ -204,7 +204,7 @@ class Users extends RestController {
                 $this->response([
                     'status' => false,
                     'message' => 'Password lama harus diisi'
-                ], REST_Controller::HTTP_BAD_REQUEST);
+                ], RestController::HTTP_BAD_REQUEST);
                 return;
             }
             
@@ -214,7 +214,7 @@ class Users extends RestController {
                 $this->response([
                     'status' => false,
                     'message' => 'Password lama salah'
-                ], REST_Controller::HTTP_UNAUTHORIZED);
+                ], RestController::HTTP_UNAUTHORIZED);
                 return;
             }
         }
@@ -226,12 +226,12 @@ class Users extends RestController {
             $this->response([
                 'status' => true,
                 'message' => 'Password berhasil diubah'
-            ], REST_Controller::HTTP_OK);
+            ], RestController::HTTP_OK);
         } else {
             $this->response([
                 'status' => false,
                 'message' => 'Gagal mengubah password'
-            ], REST_Controller::HTTP_INTERNAL_SERVER_ERROR);
+            ], RestController::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

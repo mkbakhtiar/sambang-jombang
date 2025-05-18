@@ -11,29 +11,45 @@ class Jwt_auth {
 
     public function __construct() {
         $this->CI =& get_instance();
-        $this->secret_key = "your_secret_key_here"; // Ganti dengan kunci rahasia yang sama dengan controller
+        
+        // Load config JWT
+        $this->CI->load->config('jwt');
+        $this->secret_key = $this->CI->config->item('jwt_key');
+
     }
 
     /**
      * Verifikasi token JWT
-     * @return bool|object
+     * @return array
      */
     public function verify_token() {
         $headers = $this->CI->input->request_headers();
         
+        // Debug headers
+        log_message('debug', 'Headers: ' . json_encode($headers));
+        
         // Cek header Authorization
         if (isset($headers['Authorization'])) {
             $token = str_replace('Bearer ', '', $headers['Authorization']);
+        } elseif (isset($headers['authorization'])) {
+            // Case-sensitive di beberapa server
+            $token = str_replace('Bearer ', '', $headers['authorization']);
         } else {
-            return [
-                'status' => false,
-                'message' => 'Token tidak ditemukan'
-            ];
+            // Jika tidak ada di header, coba cek di GET atau POST
+            $token = $this->CI->input->get_post('token');
+            
+            if (empty($token)) {
+                return [
+                    'status' => false,
+                    'message' => 'Token tidak ditemukan'
+                ];
+            }
         }
 
         try {
-            // Decode token
+            // Decode token menggunakan Firebase JWT
             $decoded = JWT::decode($token, new Key($this->secret_key, 'HS256'));
+            
             return [
                 'status' => true,
                 'data' => $decoded
@@ -46,7 +62,7 @@ class Jwt_auth {
         } catch (\Exception $e) {
             return [
                 'status' => false,
-                'message' => 'Token tidak valid'
+                'message' => 'Token tidak valid: ' . $headers['Authorization']
             ];
         }
     }
@@ -64,11 +80,7 @@ class Jwt_auth {
                 'message' => $result['message']
             ];
             
-            $this->CI->output
-                ->set_content_type('application/json')
-                ->set_status_header(401)
-                ->set_output(json_encode($response));
-            exit;
+            echo json_encode($response);
         }
         
         // Simpan data user di property CI untuk digunakan di controller
@@ -89,28 +101,56 @@ class Jwt_auth {
                 'message' => $result['message']
             ];
             
-            $this->CI->output
-                ->set_content_type('application/json')
-                ->set_status_header(401)
-                ->set_output(json_encode($response));
-            exit;
+            echo json_encode($response);
         }
         
-        // Cek role user
-        if (!empty($allowed_roles) && !in_array($result['data']->id_role, $allowed_roles)) {
-            $response = [
-                'status' => false,
-                'message' => 'Anda tidak memiliki akses untuk fitur ini'
-            ];
-            
-            $this->CI->output
-                ->set_content_type('application/json')
-                ->set_status_header(403)
-                ->set_output(json_encode($response));
-            exit;
+        // Cek role user - gunakan 'role' sesuai dengan field di token
+        if (!empty($allowed_roles)) {
+            $userRole = isset($result['data']->role) ? $result['data']->role : 
+                       (isset($result['data']->id_role) ? $result['data']->id_role : null);
+                       
+            if ($userRole === null || !in_array($userRole, $allowed_roles)) {
+                $response = [
+                    'status' => false,
+                    'message' => 'Anda tidak memiliki akses untuk fitur ini'
+                ];
+                
+                 echo json_encode($response);
+            }
         }
         
         // Simpan data user di property CI untuk digunakan di controller
         $this->CI->user_data = $result['data'];
+    }
+    
+    /**
+     * Generate JWT token
+     * @param array $data
+     * @return string
+     */
+    public function generate_token($data) {
+        // Load config JWT
+        $this->CI->load->config('jwt');
+        
+        $issuer = $this->CI->config->item('jwt_issuer');
+        $audience = $this->CI->config->item('jwt_audience');
+        $timeout = $this->CI->config->item('jwt_timeout');
+        
+        $time = time();
+        
+        // JWT payload
+        $payload = array_merge(
+            $data,
+            [
+                'iss' => $issuer ?: 'api',
+                'aud' => $audience ?: 'users',
+                'iat' => $time,
+                'nbf' => $time,
+                'exp' => $time + ($timeout ?: 3600)
+            ]
+        );
+        
+        // Generate JWT menggunakan Firebase JWT
+        return JWT::encode($payload, $this->secret_key, 'HS256');
     }
 }

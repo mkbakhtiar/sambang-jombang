@@ -59,5 +59,5 @@ $route['api/login'] = 'v2/api/auth/login';
 $route['api/check'] = 'v2/api/auth/check_token';
 
 // Contoh routes untuk API lainnya yang memerlukan autentikasi
-$route['api/users'] = 'v2/api/user/list_get';
+$route['api/users']['GET'] = 'v2/api/user/list';
 $route['api/users/(:num)'] = 'v2/api/user/detail_get/$1';
