@@ -359,4 +359,148 @@ class Auth_model extends CI_Model
 		$this->session->set_flashdata('pesan', '<div class="alert alert-danger alert-dismissible show fade"><div class="alert-body"><button class="close" data-dismiss="alert"><span>×</span></button>Username/Password Salah</div></div>');
 		return false;
 	}
+
+	// API METHOD
+
+	/**
+     * Cek login user berdasarkan username
+     * @param string $username
+     * @return object|null
+     */
+    public function check_login($username) {
+        $this->db->where('username', $username);
+        $this->db->where('status', 1); // Hanya user aktif
+        $query = $this->db->get('auth_users');
+        
+        if ($query->num_rows() > 0) {
+            return $query->row();
+        }
+        return null;
+    }
+
+    /**
+     * Update last login user
+     * @param int $id_user
+     * @return bool
+     */
+    public function update_last_login($id_user) {
+        $this->db->where('id_user', $id_user);
+        $this->db->update('auth_users', [
+            'last_login' => date('Y-m-d H:i:s')
+        ]);
+        
+        return $this->db->affected_rows() > 0;
+    }
+
+    /**
+     * Cek apakah username sudah terdaftar
+     * @param string $username
+     * @return bool
+     */
+    public function check_username($username) {
+        $this->db->where('username', $username);
+        $query = $this->db->get('auth_users');
+        
+        return $query->num_rows() > 0;
+    }
+
+    /**
+     * Cek apakah email sudah terdaftar
+     * @param string $email
+     * @return bool
+     */
+    public function check_email($email) {
+        $this->db->where('email', $email);
+        $query = $this->db->get('auth_users');
+        
+        return $query->num_rows() > 0;
+    }
+
+    /**
+     * Registrasi user baru
+     * @param array $data
+     * @return int|bool
+     */
+    public function register_user($data) {
+        $this->db->insert('auth_users', $data);
+        
+        if ($this->db->affected_rows() > 0) {
+            return $this->db->insert_id();
+        }
+        return false;
+    }
+
+    /**
+     * Ambil data user berdasarkan ID
+     * @param int $id_user
+     * @return object|null
+     */
+    public function get_user_by_id($id_user) {
+        $this->db->where('id_user', $id_user);
+        $query = $this->db->get('auth_users');
+        
+        if ($query->num_rows() > 0) {
+            return $query->row();
+        }
+        return null;
+    }
+
+    /**
+     * Update data user
+     * @param int $id_user
+     * @param array $data
+     * @return bool
+     */
+    public function update_user($id_user, $data) {
+        $this->db->where('id_user', $id_user);
+        $this->db->update('auth_users', $data);
+        
+        return $this->db->affected_rows() > 0;
+    }
+
+    /**
+     * Reset password user
+     * @param int $id_user
+     * @param string $new_password
+     * @return bool
+     */
+    public function reset_password($id_user, $new_password) {
+        $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
+        
+        $this->db->where('id_user', $id_user);
+        $this->db->update('auth_users', [
+            'password' => $hashed_password
+        ]);
+        
+        return $this->db->affected_rows() > 0;
+    }
+
+	public function check_credentials($username, $password) {
+        $this->db->from($this->_table);
+        $this->db->where('username', $username);
+        $query = $this->db->get();
+        
+        if ($query->num_rows() === 0) {
+            return false;
+        }
+        
+        $user = $query->row();
+        
+        if ($this->verify_md5_password($password, $user->password)) {
+            // Update last login time
+            $this->update_last_login($user->id_user);
+            return $user;
+        }
+        
+        return false;
+    }
+
+    function verify_md5_password($password, $stored_hash) {
+        // Pastikan password di-MD5 terlebih dahulu karena itu yang disimpan di database
+        $md5_password = md5($password);
+        
+        // Kemudian verifikasi dengan hash yang disimpan 
+        // menggunakan constant-time comparison untuk keamanan
+        return hash_equals($stored_hash, $md5_password);
+    }
 }

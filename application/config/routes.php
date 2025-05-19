@@ -52,3 +52,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $route['default_controller'] = 'front';
 $route['404_override'] = 'oops/not_found';
 $route['translate_uri_dashes'] = FALSE;
+
+// Routes untuk API Autentikasi
+$route['api/test'] = 'v2/api/auth/test';
+$route['api/login'] = 'v2/api/auth/login';
+$route['api/check'] = 'v2/api/auth/check_token';
+
+// Contoh routes untuk API lainnya yang memerlukan autentikasi
+$route['api/users']['GET'] = 'v2/api/user/list';
+$route['api/users/(:num)'] = 'v2/api/user/detail_get/$1';

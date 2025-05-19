@@ -24,6 +24,10 @@ class ComposerStaticInitbd37752d67c37a1a99bd323b0e937d5b
         array (
             'phpseclib3\\' => 11,
         ),
+        'c' => 
+        array (
+            'chriskacerguis\\RestServer\\' => 26,
+        ),
         'Z' => 
         array (
             'ZipStream\\' => 10,
@@ -85,6 +89,10 @@ class ComposerStaticInitbd37752d67c37a1a99bd323b0e937d5b
         'phpseclib3\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib',
+        ),
+        'chriskacerguis\\RestServer\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/chriskacerguis/codeigniter-restserver/src',
         ),
         'ZipStream\\' => 
         array (
